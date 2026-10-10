@@ -169,7 +169,9 @@ public:
     }
 
     bool eventFilter(QObject *watched, QEvent *e) override {
-        if (watched == m_view && e->type() == QEvent::Hide && isVisible()) {
+        if (watched == m_view && e->type() == QEvent::Hide && !isHidden()) {
+            // isVisible() is already false here: when an ancestor hides, Qt clears
+            // the visible state of the whole subtree before sending the Hide events.
             NT_LOG("settings: home view hidden; closing without saving");
             close(false);
         }
