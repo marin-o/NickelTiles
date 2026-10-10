@@ -1,0 +1,5 @@
+[submodule "NickelHook"]
+	path = NickelHook
+	url = https://github.com/pgaskin/NickelHook.git
+	# tools/build.sh patches nh.c in place (weak symbols); not a source change
+	ignore = dirty

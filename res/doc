@@ -1,0 +1,51 @@
+# NickelTiles (libnickeltiles.so)
+#
+# Turns the Kobo home screen into a grid of app tiles. Built on NickelHook,
+# like NickelMenu and NickelHome. Firmware 4.23.15505+ home screen layout;
+# developed and tested on 4.45.23697.
+#
+# What the grid shows
+#   - "Continue reading": the most recently opened book across KOReader
+#     (history.lua), Plato (.metadata.json) and Kobo's reader (KoboReader.sqlite),
+#     with title, author, progress and the cover from the EPUB (cached under
+#     covers/). Tapping opens it in the app that last read it.
+#     nt_recent_source: auto (default) | koreader | plato | nickel.
+#   - Sleep screen: with "Show book covers full screen" on (Settings >
+#     Energy saving and privacy), the sleep cover is that same book, from
+#     whichever app read it last. Kept as .kobo/screensaver/nt-recent.<ext>,
+#     refreshed as the reader goes to sleep. nt_sleep_cover:0 turns it off.
+#   - One tile per NickelMenu main-menu entry (KOBOeReader/.adds/nm/*). Add,
+#     remove or rename entries there and the grid follows at the next boot.
+#     Supported actions: cmd_spawn, cmd_output, power, nickel_misc
+#     (force_usb_connection, home, rescan_books), nickel_wifi, dbg_toast and
+#     chain_success/chain_failure/chain_always. Others show a toast.
+#   - Extra tiles from tile: lines in the config.
+#
+# Using it
+#   - The "Tiles settings" tile (gear) opens a settings page: tiles per row,
+#     tile size, the Continue reading tile and where it takes the book from,
+#     the sleep screen cover, Kobo's home rows, and which tiles are shown.
+#     Save applies at once; Cancel leaves everything as it was.
+#   - Tap a tile: it darkens while pressed and runs when released.
+#   - Long-press a tile (about 0.7 s): it gets a thick frame (arrange mode).
+#     Tap another tile to swap the two; tap the same tile to cancel. The new
+#     order is saved to the config (order: line).
+#
+# Configuration: KOBOeReader/.adds/nickel-tiles/config (key:value, # comments,
+# reboot to apply). See the default file for every key.
+#   nt_enabled, nt_log, nt_draw, nt_actions, nt_hide_rows, nt_recent, nt_recent_source,
+#   nt_sleep_cover, nt_columns, nt_tile_px, hide:<label>, icon:<label>:<png>, order:<a>|<b>|..,
+#   tile:<label>:<icon>:<command>
+#
+# Icons: icons/<slug>.png in this folder, where <slug> is the label in lower
+# case with runs of other characters replaced by '-' (e.g. "kpm - Status" ->
+# kpm-status.png). Square PNGs, 200x200 recommended. Missing icon: a letter
+# tile is drawn.
+#
+# Uninstall: create an empty file named "uninstall" in this folder and reboot,
+# or delete this folder. The mod removes itself on the next start.
+#
+# Failsafe: if Nickel dies within 3 seconds of the mod loading, the mod stays
+# disabled on the next boot (NickelHook renames it out of the way). Reinstall
+# the package to re-enable it. Do not launch an app in the first seconds after
+# the home screen appears.

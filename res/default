@@ -1,0 +1,52 @@
+#
+# NickelTiles configuration file (KOBOeReader/.adds/nickel-tiles/config)
+#
+# One setting per line, key:value. Lines starting with # are comments.
+# Most of these can also be changed on the reader with the "Tiles settings"
+# tile, which applies them at once. Edits made here need a reboot.
+# See the doc file.
+#
+# The grid mirrors your NickelMenu main-menu entries (KOBOeReader/.adds/nm/*)
+# automatically: add an entry there and it appears as a tile. Icons are looked
+# up as icons/<label-slug>.png in this folder, otherwise a letter tile is drawn.
+
+# Master switch (default 1).
+# nt_enabled:1
+
+# Verbose log to nickel-tiles.log in this folder (default 0).
+nt_log:0
+
+# Insert the grid (default 1) and run actions on tap (default 1).
+nt_draw:1
+nt_actions:1
+
+# Hide Kobo's own home rows so the grid is the home screen (default 1).
+nt_hide_rows:1
+
+# "Continue reading" tile (default 1): the most recently opened book across
+# KOReader, Plato and Kobo's reader, opened in the app that read it, with the
+# cover taken from the EPUB. nt_recent_source: auto | koreader | plato | nickel.
+nt_recent:1
+nt_recent_source:auto
+
+# Sleep screen shows the "Continue reading" book's cover (default 1). Needs
+# Settings > Energy saving and privacy > "Show book covers full screen" on;
+# the image is kept as .kobo/screensaver/nt-recent.<ext>.
+nt_sleep_cover:1
+
+# Grid shape.
+nt_columns:5
+nt_tile_px:180
+
+# Hide a NickelMenu entry from the grid (repeatable):
+# hide:kpm - Status
+
+# Icon override (repeatable): icon:<label>:<png path>
+# icon:KOReader:/mnt/onboard/.adds/nickel-tiles/icons/koreader.png
+
+# Extra tiles that are not NickelMenu entries: tile:<label>:<icon path>:<command>
+# tile:Terminal:/mnt/onboard/.adds/nickel-tiles/icons/kobold.png:/mnt/onboard/.adds/some/script.sh
+
+# Display order, written by arrange mode: long-press a tile, then tap another
+# tile to swap them. Labels separated by '|'.
+# order:Continue reading|KOReader|Plato|Cobalt|Kobold

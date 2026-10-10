@@ -1,0 +1,7 @@
+/KoboRoot.tgz
+/src/*.so
+/src/*.o
+/NickelHook/*.o
+/NickelHook/*.moc
+/NickelHook/*.moc.o
+/NickelHook/nhplugin.json
