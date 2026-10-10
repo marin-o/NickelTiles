@@ -199,6 +199,7 @@ private:
     struct State {
         int columns, tilePx, source;
         bool recent, sleepCover, hideRows;
+        bool infoTitle, infoAuthor, infoProgress;   // Continue reading caption
         QSet<QString> hidden;
     };
 
@@ -213,6 +214,15 @@ private:
         s.source = 0;
         for (int i = 0; i < kSourceCount; i++)
             if (src && !strcmp(src, kSources[i].value)) s.source = i;
+        const char *info = nt_config_get("nt_recent_info");
+        if (!info || !*info) {
+            s.infoTitle = s.infoAuthor = s.infoProgress = true;
+        } else {
+            const QString i = QString::fromUtf8(info).toLower();
+            s.infoTitle = i.contains(QLatin1String("title"));
+            s.infoAuthor = i.contains(QLatin1String("author"));
+            s.infoProgress = i.contains(QLatin1String("progress"));
+        }
         for (const nt_entry_t *e = nt_config_entries(); e; e = e->next)
             if (!strcmp(e->key, "hide")) s.hidden.insert(QString::fromUtf8(e->val).trimmed());
         m_state = s;
@@ -300,6 +310,17 @@ private:
         m_source = button(QString(), 314, [this]() { m_state.source = (m_state.source + 1) % kSourceCount; refresh(); });
         h->addWidget(m_source);
 
+        h = row(v, QStringLiteral("Tile shows"));
+        m_infoTitle = new NtControl(this, NtControl::Check, QStringLiteral("Title"), [this]() { m_state.infoTitle = !m_state.infoTitle; refresh(); });
+        m_infoAuthor = new NtControl(this, NtControl::Check, QStringLiteral("Author"), [this]() { m_state.infoAuthor = !m_state.infoAuthor; refresh(); });
+        m_infoProgress = new NtControl(this, NtControl::Check, QStringLiteral("Progress"), [this]() { m_state.infoProgress = !m_state.infoProgress; refresh(); });
+        m_infoTitle->setFixedWidth(150);
+        m_infoAuthor->setFixedWidth(170);
+        m_infoProgress->setFixedWidth(190);
+        h->addWidget(m_infoTitle);
+        h->addWidget(m_infoAuthor);
+        h->addWidget(m_infoProgress);
+
         h = row(v, QStringLiteral("Sleep screen shows that book"),
                 QStringLiteral("Also turn on Kobo's “Show book covers full screen”"));
         m_sleep = new NtControl(this, NtControl::Toggle, QString(), [this]() { m_state.sleepCover = !m_state.sleepCover; refresh(); });
@@ -363,6 +384,9 @@ private:
         m_recent->setChecked(m_state.recent);
         m_source->setText(QString::fromUtf8(kSources[m_state.source].name));
         m_source->setControlEnabled(m_state.recent);
+        m_infoTitle->setChecked(m_state.infoTitle);
+        m_infoAuthor->setChecked(m_state.infoAuthor);
+        m_infoProgress->setChecked(m_state.infoProgress);
         m_sleep->setChecked(m_state.sleepCover);
         m_hideRows->setChecked(m_state.hideRows);
 
@@ -401,6 +425,13 @@ private:
         if (a.tilePx != b.tilePx) ok &= setValue("nt_tile_px", QString::number(b.tilePx));
         if (a.recent != b.recent) ok &= setValue("nt_recent", QString::number(b.recent ? 1 : 0));
         if (a.source != b.source) ok &= setValue("nt_recent_source", QString::fromUtf8(kSources[b.source].value));
+        if (a.infoTitle != b.infoTitle || a.infoAuthor != b.infoAuthor || a.infoProgress != b.infoProgress) {
+            QStringList parts;
+            if (b.infoTitle) parts << QStringLiteral("title");
+            if (b.infoAuthor) parts << QStringLiteral("author");
+            if (b.infoProgress) parts << QStringLiteral("progress");
+            ok &= setValue("nt_recent_info", parts.isEmpty() ? QStringLiteral("none") : parts.join(QStringLiteral(",")));
+        }
         if (a.sleepCover != b.sleepCover) ok &= setValue("nt_sleep_cover", QString::number(b.sleepCover ? 1 : 0));
         if (a.hideRows != b.hideRows) ok &= setValue("nt_hide_rows", QString::number(b.hideRows ? 1 : 0));
         if (a.hidden != b.hidden) {
@@ -441,6 +472,7 @@ private:
     State m_initial, m_state;
     int m_page;
     NtControl *m_colsDown, *m_colsUp, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
+    NtControl *m_infoTitle, *m_infoAuthor, *m_infoProgress;
     QLabel *m_colsValue, *m_pxValue, *m_pageLabel;
     QList<NtControl*> m_checks;
 };

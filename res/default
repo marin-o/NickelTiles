@@ -28,6 +28,9 @@ nt_hide_rows:1
 # cover taken from the EPUB. nt_recent_source: auto | koreader | plato | nickel.
 nt_recent:1
 nt_recent_source:auto
+# What its caption shows: any of title, author, progress (comma separated),
+# or none. Default: title,author,progress.
+nt_recent_info:title,author,progress
 
 # Sleep screen shows the "Continue reading" book's cover (default 1). Needs
 # Settings > Energy saving and privacy > "Show book covers full screen" on;

@@ -4,12 +4,19 @@ A grid of app tiles on the Kobo home screen. Built on
 [NickelHook](https://github.com/pgaskin/NickelHook), like NickelMenu and
 NickelHome.
 
+<p align="center">
+  <img src="docs/screenshots/home.png" width="45%" alt="Home screen with the tile grid">
+  &nbsp;
+  <img src="docs/screenshots/settings.png" width="45%" alt="The Tiles settings page">
+</p>
+
 - **Your NickelMenu entries as tiles.** Every main-menu entry in
   `.adds/nm/` becomes a tile automatically (KOReader, Plato, USB connection,
   reboot, KPM, ...). Add or remove an entry and the grid follows.
 - **Continue reading.** One tile always holds your most recent book, whichever
-  app you read it in: KOReader, Plato or Kobo's own reader. It shows the cover,
-  title and progress, and opens the book in the app that last read it.
+  app you read it in: KOReader, Plato or Kobo's own reader. It shows the cover
+  with any of title, author and progress under it, and opens the book in the
+  app that last read it.
 - **Sleep screen follows that book.** With Kobo's *Show book covers full
   screen* setting on, the sleep screen shows the same book's cover, not just
   the last book opened in Kobo's reader.

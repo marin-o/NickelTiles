@@ -10,6 +10,7 @@
 #     with title, author, progress and the cover from the EPUB (cached under
 #     covers/). Tapping opens it in the app that last read it.
 #     nt_recent_source: auto (default) | koreader | plato | nickel.
+#     nt_recent_info: which of title, author, progress the caption shows.
 #   - Sleep screen: with "Show book covers full screen" on (Settings >
 #     Energy saving and privacy), the sleep cover is that same book, from
 #     whichever app read it last. Kept as .kobo/screensaver/nt-recent.<ext>,
@@ -33,7 +34,7 @@
 #
 # Configuration: KOBOeReader/.adds/nickel-tiles/config (key:value, # comments,
 # reboot to apply). See the default file for every key.
-#   nt_enabled, nt_log, nt_draw, nt_actions, nt_hide_rows, nt_recent, nt_recent_source,
+#   nt_enabled, nt_log, nt_draw, nt_actions, nt_hide_rows, nt_recent, nt_recent_source, nt_recent_info,
 #   nt_sleep_cover, nt_columns, nt_tile_px, hide:<label>, icon:<label>:<png>, order:<a>|<b>|..,
 #   tile:<label>:<icon>:<command>
 #

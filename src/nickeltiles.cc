@@ -51,6 +51,7 @@
 #include <QSpacerItem>
 #include <QString>
 #include <QStringList>
+#include <QTimer>
 #include <QTimerEvent>
 #include <QTouchEvent>
 #include <QVBoxLayout>
@@ -288,6 +289,47 @@ static QPixmap nt_icon_for(const QString &label, const QString &explicitPath) {
 
 // --- tiles
 
+// Tile captions: 22 px text, up to three lines under the icon.
+static const int kNtCaptionPx = 22;
+static const int kNtCaptionLines = 3;
+
+static QFont nt_caption_font(const QWidget *w) {
+    QFont f = w->font();
+    f.setPixelSize(kNtCaptionPx);
+    return f;
+}
+
+// Greedy word wrap of `text` into at most `maxLines` lines of `width` px; the
+// last line takes the rest of the text and is elided if it does not fit.
+static QStringList nt_wrap(const QString &text, const QFontMetrics &fm, int width, int maxLines) {
+    QStringList lines;
+    if (maxLines <= 0) return lines;
+    const QStringList words = text.simplified().split(QLatin1Char(' '), QString::SkipEmptyParts);
+    int i = 0;
+    while (i < words.size()) {
+        if (lines.size() == maxLines - 1) {
+            lines << fm.elidedText(QStringList(words.mid(i)).join(QStringLiteral(" ")), Qt::ElideRight, width);
+            return lines;
+        }
+        QString line = words.at(i++);
+        while (i < words.size() && fm.width(line + QLatin1Char(' ') + words.at(i)) <= width)
+            line += QLatin1Char(' ') + words.at(i++);
+        lines << fm.elidedText(line, Qt::ElideRight, width);   // a single over-long word
+    }
+    return lines;
+}
+
+// What the Continue reading caption shows: nt_recent_info is a comma list of
+// title, author, progress ("none" for nothing). Default: all three.
+static void nt_recent_info(bool *title, bool *author, bool *progress) {
+    const char *v = nt_config_get("nt_recent_info");
+    if (!v || !*v) { *title = *author = *progress = true; return; }
+    const QString s = QString::fromUtf8(v).toLower();
+    *title = s.contains(QLatin1String("title"));
+    *author = s.contains(QLatin1String("author"));
+    *progress = s.contains(QLatin1String("progress"));
+}
+
 class NtGrid;
 
 class NtTile : public QWidget {
@@ -295,7 +337,12 @@ public:
     NtTile(NtGrid *grid, const QString &label, const QPixmap &icon, int px);
     const QString &label() const { return m_label; }
     void setIcon(const QPixmap &icon) { m_icon = icon; update(); }
-    void setTitle(const QString &title) { m_title = title; update(); }
+    void setTitle(const QString &title) { m_title = title; m_hasInfo = false; update(); }
+    // Book caption: title, author and progress on their own lines (as chosen by
+    // nt_recent_info); percent < 0 means unknown.
+    void setInfo(const QString &title, const QString &author, int percent) {
+        m_title = title; m_author = author; m_percent = percent; m_hasInfo = true; update();
+    }
     void setMarked(bool marked) { if (m_marked != marked) { m_marked = marked; update(); } }
     virtual void activate() = 0;
 
@@ -311,6 +358,9 @@ private:
     NtGrid *m_grid;
     QString m_label;     // identity (NickelMenu label)
     QString m_title;     // drawn text (label unless overridden, e.g. book title)
+    QString m_author;
+    int m_percent;
+    bool m_hasInfo;
     QPixmap m_icon;
     bool m_pressed;
     bool m_marked;
@@ -613,10 +663,7 @@ public:
             // then, which handles anything Nickel can.
             if (!m_target) { m_koPath = best.path; NT_DBG("recent: Nickel widget empty, will open in KOReader"); }
         }
-        QString text = best.title;
-        if (!best.author.isEmpty()) text += QStringLiteral("\n") + best.author;
-        if (best.percent >= 0) text += QStringLiteral("  ") + QString::number(best.percent) + QStringLiteral("%");
-        setTitle(text);
+        setInfo(best.title, best.author, best.percent);
         const QString lower = best.path.toLower();
         QPixmap cover;
         if (lower.endsWith(QLatin1String(".epub")) || lower.endsWith(QLatin1String(".kepub")))
@@ -747,6 +794,14 @@ protected:
         QWidget::showEvent(event);
         if (m_recent) m_recent->refresh();
         startTimer(2000);   // Nickel updates its database and widgets shortly after
+        // With nt_log:1, a picture of the home screen once it has settled
+        // (for bug reports and the README).
+        if (nt_log_verbose)
+            QTimer::singleShot(4000, this, [this]() {
+                // One file per screen visit (a later one may show a dialog on top).
+                const QString name = QStringLiteral(NT_CONFIG_DIR "/home-") + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss")) + QStringLiteral(".png");
+                window()->grab().save(name, "PNG");
+            });
     }
     void timerEvent(QTimerEvent *event) override {
         killTimer(event->timerId());
@@ -768,10 +823,10 @@ private:
 // --- NtTile
 
 NtTile::NtTile(NtGrid *grid, const QString &label, const QPixmap &icon, int px)
-    : QWidget(grid), m_grid(grid), m_label(label), m_title(label), m_icon(icon),
+    : QWidget(grid), m_grid(grid), m_label(label), m_title(label), m_percent(-1), m_hasInfo(false), m_icon(icon),
       m_pressed(false), m_marked(false), m_longPressed(false), m_timer(0) {
     setObjectName(QStringLiteral("ntTile"));
-    setFixedSize(px, px + 44);
+    setFixedSize(px, px + 6 + kNtCaptionLines * QFontMetrics(nt_caption_font(this)).lineSpacing() + 4);
     setAttribute(Qt::WA_AcceptTouchEvents, true);
 }
 
@@ -872,12 +927,29 @@ void NtTile::paintEvent(QPaintEvent *) {
         if (sp > 0 && sp + 1 < m_label.size()) initials += m_label.at(sp + 1).toUpper();
         p.drawText(iconRect, Qt::AlignCenter, initials);
     }
-    QFont f = font();
-    f.setPixelSize(22);
+    const QFont f = nt_caption_font(this);
+    const QFontMetrics fm(f);
     p.setFont(f);
     p.setPen(fg);
-    QRect textRect(4, pad + iconSide + 4, width() - 8, height() - (pad + iconSide + 4) - 4);
-    p.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, m_title);
+    const int textWidth = width() - 8;
+    QStringList lines;
+    if (m_hasInfo) {
+        bool showTitle, showAuthor, showProgress;
+        nt_recent_info(&showTitle, &showAuthor, &showProgress);
+        QStringList tail;
+        if (showAuthor && !m_author.isEmpty()) tail << fm.elidedText(m_author, Qt::ElideRight, textWidth);
+        if (showProgress && m_percent >= 0) tail << QString::number(m_percent) + QStringLiteral("%");
+        // The title gets whatever lines the author and progress leave.
+        if (showTitle) lines << nt_wrap(m_title, fm, textWidth, kNtCaptionLines - tail.size());
+        lines << tail;
+    } else {
+        lines = nt_wrap(m_title, fm, textWidth, kNtCaptionLines);
+    }
+    int y = pad + iconSide + 6;
+    for (const QString &line : lines) {
+        p.drawText(QRect(4, y, textWidth, fm.lineSpacing()), Qt::AlignHCenter | Qt::AlignTop, line);
+        y += fm.lineSpacing();
+    }
 }
 
 // --- NtGrid
