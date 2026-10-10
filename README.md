@@ -32,8 +32,14 @@ package again re-enables it.
 
 ## Install
 
-**With KPM** (the Kobo package manager): add this repository
-(`kpm add https://github.com/marin-o/NickelTiles`) and install `nickeltiles`.
+**With KPM** (the Kobo package manager), add the repository, then fetch and
+stage the latest release, and reboot:
+
+```sh
+kpm add https://github.com/marin-o/NickelTiles --name nickeltiles
+kpm check
+kpm update nickeltiles --reboot
+```
 
 **By hand**: download `KoboRoot.tgz` from the latest release, copy it into the
 `.kobo` folder on the reader over USB, eject and unplug. The reader installs it
