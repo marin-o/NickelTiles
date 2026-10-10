@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: NickelTiles
+    runs-on: ubuntu-latest
+    container: ghcr.io/pgaskin/nickeltc:1.0
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+        fetch-depth: 0   # tags, for the version string
+    - name: Build
+      shell: sh
+      run: |
+        git config --global --add safe.directory "$PWD"
+        git config --global --add safe.directory "$PWD/NickelHook"
+        sh tools/patch-nickelhook.sh
+        make all koboroot
+        tar tzvf KoboRoot.tgz
+        sha256sum KoboRoot.tgz
+    - name: Upload
+      uses: actions/upload-artifact@v5
+      with:
+        name: NickelTiles
+        path: KoboRoot.tgz

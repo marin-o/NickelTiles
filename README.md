@@ -85,7 +85,17 @@ removes its library on the next start.
 ## Build
 
 Needs the [NickelTC](https://github.com/pgaskin/NickelTC) toolchain (GCC 4.9,
-Qt 5.2.1).
+Qt 5.2.1). Releases are built by GitHub Actions in the NickelTC image, with a
+build provenance attestation for `KoboRoot.tgz`. The same build locally:
+
+```sh
+git clone --recursive https://github.com/marin-o/NickelTiles
+cd NickelTiles
+docker run --rm -v "$PWD:/src" -w /src ghcr.io/pgaskin/nickeltc:1.0 \
+  sh -c 'sh tools/patch-nickelhook.sh && make all koboroot'
+```
+
+Without Docker, with NickelTC unpacked somewhere:
 
 ```sh
 git clone --recursive https://github.com/marin-o/NickelTiles

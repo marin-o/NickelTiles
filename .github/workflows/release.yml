@@ -1,0 +1,72 @@
+name: Release
+
+# Pushing a version tag (vX.Y.Z) builds KoboRoot.tgz with NickelTC, attests
+# where it was built, and publishes the GitHub release with it attached. The
+# release notes are the annotated tag's message plus the package checksum.
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: ghcr.io/pgaskin/nickeltc:1.0
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+        fetch-depth: 0
+    - name: Build
+      shell: sh
+      run: |
+        git config --global --add safe.directory "$PWD"
+        git config --global --add safe.directory "$PWD/NickelHook"
+        sh tools/patch-nickelhook.sh
+        make all koboroot
+        tar tzvf KoboRoot.tgz
+    - name: Attest
+      uses: actions/attest-build-provenance@v3
+      with:
+        subject-path: KoboRoot.tgz
+    - name: Upload
+      uses: actions/upload-artifact@v5
+      with:
+        name: NickelTiles
+        path: KoboRoot.tgz
+
+  release:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+    - name: Download
+      uses: actions/download-artifact@v5
+      with:
+        name: NickelTiles
+    - name: Create release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ github.ref_name }}
+      run: |
+        # checkout can leave the tag lightweight; fetch the annotated one for its message
+        git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+        {
+          git tag -l --format='%(contents)' "$TAG"
+          echo
+          echo "sha256 \`$(sha256sum KoboRoot.tgz | cut -d' ' -f1)\`  KoboRoot.tgz"
+        } > notes.md
+        cat notes.md
+        gh release create "$TAG" KoboRoot.tgz --title "NickelTiles $TAG" --notes-file notes.md
