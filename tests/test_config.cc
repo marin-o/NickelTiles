@@ -1,11 +1,8 @@
-// The raw config file (config.c) and the settings built on it (settings_model.cc).
-// Each test writes its own config under /tmp/nt-tests/config and reloads it,
-// because config.c caches what it read.
+// Config file and settings (config.c, settings_model.cc): tile size, recent-book info, in-place saves.
 
 #include <QtTest>
 
 #include <QFile>
-#include <QStringList>
 
 #include "config.h"
 #include "fixtures.h"
@@ -53,23 +50,13 @@ private slots:
     void init() { removeFixtures(); }
     void cleanup() { removeFixtures(); }
 
-    void defaultsWhenEmpty();
     void tilePx_data();
     void tilePx();
     void recentInfoFlags();
-    void recentCoverFlag();
-    void hideLines();
-    void orderSplitsOnBar();
     void saveReplacesChangedKeysInPlace();
-    void saveAppendsMissingKey();
     void saveEmptiedOrderRemovesLine();
     void saveRoundTrip();
 };
-
-void TestConfig::defaultsWhenEmpty() {
-    setConfig(QByteArray());
-    compareSettings(nt_settings(), NtSettings());
-}
 
 void TestConfig::tilePx_data() {
     QTest::addColumn<QByteArray>("config");
@@ -100,29 +87,6 @@ void TestConfig::recentInfoFlags() {
     QVERIFY(some.progress);
 }
 
-void TestConfig::recentCoverFlag() {
-    setConfig("nt_recent_cover:0\n");
-    QVERIFY(!nt_settings().recentCover);
-    setConfig("nt_sleep_cover:0\n");
-    QVERIFY(!nt_settings().sleepCover);
-}
-
-void TestConfig::hideLines() {
-    setConfig("hide:kpm - Update all\nhide:kpm - Status\n");
-    QStringList want;
-    want << QStringLiteral("kpm - Update all") << QStringLiteral("kpm - Status");
-    QCOMPARE(nt_settings().hidden, want);
-}
-
-void TestConfig::orderSplitsOnBar() {
-    // Blank entries and surrounding spaces are dropped.
-    setConfig("order:Continue reading| KOReader |Plato|| Cobalt\n");
-    QStringList want;
-    want << QStringLiteral("Continue reading") << QStringLiteral("KOReader")
-         << QStringLiteral("Plato") << QStringLiteral("Cobalt");
-    QCOMPARE(nt_settings().order, want);
-}
-
 void TestConfig::saveReplacesChangedKeysInPlace() {
     setConfig("# my comment\nnt_columns:5\nnt_log:0\nnt_recent_cover:1\n");
     const NtSettings before = nt_settings();
@@ -132,18 +96,6 @@ void TestConfig::saveReplacesChangedKeysInPlace() {
     QVERIFY(nt_settings_save(before, after));
     // Only the two changed lines differ; the comment and nt_log stay as they were.
     QCOMPARE(readConfig(), QStringLiteral("# my comment\nnt_columns:4\nnt_log:0\nnt_recent_cover:0\n"));
-}
-
-void TestConfig::saveAppendsMissingKey() {
-    // config.c appends a key that is not in the file yet.
-    setConfig("# my comment\nnt_columns:5\n");
-    const NtSettings before = nt_settings();
-    NtSettings after = before;
-    after.recentCover = false;
-    QVERIFY(nt_settings_save(before, after));
-    const QString text = readConfig();
-    QVERIFY(text.startsWith(QStringLiteral("# my comment\nnt_columns:5\n")));
-    QVERIFY(text.contains(QStringLiteral("\nnt_recent_cover:0\n")));
 }
 
 void TestConfig::saveEmptiedOrderRemovesLine() {

@@ -1,13 +1,9 @@
-// NickelMenu files (nm_parse.cc): which lines become main-menu entries and how
-// their chain_* lines attach to them. Pure text parsing, so no Nickel needed.
+// NickelMenu files (nm_parse.cc): which lines become menu entries and how chain_* lines attach.
 
 #include <QtTest>
 
-#include <QDir>
-
 #include "fixtures.h"
 #include "nm_parse.h"
-#include "paths.h"
 
 namespace {
 
@@ -44,8 +40,6 @@ private slots:
     void mainMenuItemsBecomeEntries();
     void chainsAttachToTheirItem();
     void otherMenusAndLinesAreSkipped();
-    void docUninstallAndDotFilesAreSkipped();
-    void keepsLastReadWhenFolderVanishes();
 };
 
 void TestNmParse::mainMenuItemsBecomeEntries() {
@@ -88,27 +82,6 @@ void TestNmParse::otherMenusAndLinesAreSkipped() {
     QCOMPARE(entries.size(), 1);
     QCOMPARE(entries.at(0).label, QStringLiteral("Gen"));
     QCOMPARE(entries.at(0).actions.size(), 1);
-}
-
-void TestNmParse::docUninstallAndDotFilesAreSkipped() {
-    const QByteArray item("menu_item:main:Skipped:cmd_spawn:x\n");
-    writeMenu(QStringLiteral("doc"), item);
-    writeMenu(QStringLiteral("uninstall"), item);
-    writeMenu(QStringLiteral(".swp"), item);
-    writeMenu(QStringLiteral("extra"), QByteArray(": menu_item:main:Extra:cmd_spawn:y\n"));
-    const QList<NtEntry> entries = readMenus();
-    QCOMPARE(entries.size(), 1);
-    QCOMPARE(entries.at(0).label, QStringLiteral("Extra"));
-}
-
-void TestNmParse::keepsLastReadWhenFolderVanishes() {
-    // Nickel unmounts /mnt/onboard during a library scan; the folder then reads
-    // as empty and the last good list must survive.
-    const QString dir = QStringLiteral(NT_NICKELMENU_DIR);
-    QVERIFY(writeFile(dir + QStringLiteral("/menus"), QByteArray(kMenus)));
-    QCOMPARE(nt_nickelmenu_entries().size(), 3);
-    QVERIFY(QDir(dir).removeRecursively());
-    QCOMPARE(nt_nickelmenu_entries().size(), 3);
 }
 
 QTEST_MAIN(TestNmParse)

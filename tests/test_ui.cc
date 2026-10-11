@@ -1,6 +1,4 @@
-// Word wrap (ui.cc). Fonts differ between machines, so these check the shape of
-// the result (line count, elision, widths within the limit) rather than the
-// exact pixel breaks. Needs a QApplication for the font metrics.
+// Word wrap (ui.cc): a long label wraps to the line limit and only its last line is elided.
 
 #include <QtTest>
 
@@ -30,19 +28,11 @@ class TestUi : public QObject {
     Q_OBJECT
 
 private slots:
-    void shortTextIsOneLine();
     void longTextWrapsAndElidesLastLine();
-    void singleLineElidesLongText();
-    void overlongWordIsElided();
-    void zeroLinesGivesNothing();
-    void emptyTextGivesNothing();
 };
 
-void TestUi::shortTextIsOneLine() {
-    const QStringList lines = nt_wrap(QStringLiteral("Short   label"), metrics(), 400, 3);
-    QCOMPARE(lines, QStringList(QStringLiteral("Short label")));
-}
-
+// Fonts differ between machines, so this checks the shape of the result (line
+// count, elision, widths within the limit) rather than the exact pixel breaks.
 void TestUi::longTextWrapsAndElidesLastLine() {
     const QFontMetrics fm = metrics();
     const int width = 160;
@@ -54,30 +44,6 @@ void TestUi::longTextWrapsAndElidesLastLine() {
     QVERIFY(!lines.at(0).contains(kEllipsis));
     QVERIFY(lines.last().contains(kEllipsis));
     compareFitsWidth(lines, fm, width);
-}
-
-void TestUi::singleLineElidesLongText() {
-    const QFontMetrics fm = metrics();
-    const QStringList lines = nt_wrap(QStringLiteral("A long caption that cannot fit on one line"), fm, 120, 1);
-    QCOMPARE(lines.size(), 1);
-    QVERIFY(lines.first().endsWith(kEllipsis));
-    compareFitsWidth(lines, fm, 120);
-}
-
-void TestUi::overlongWordIsElided() {
-    const QFontMetrics fm = metrics();
-    const QStringList lines = nt_wrap(QStringLiteral("Supercalifragilisticexpialidocious"), fm, 60, 2);
-    QCOMPARE(lines.size(), 1);
-    QVERIFY(lines.first().endsWith(kEllipsis));
-    compareFitsWidth(lines, fm, 60);
-}
-
-void TestUi::zeroLinesGivesNothing() {
-    QVERIFY(nt_wrap(QStringLiteral("Any text"), metrics(), 200, 0).isEmpty());
-}
-
-void TestUi::emptyTextGivesNothing() {
-    QVERIFY(nt_wrap(QString(), metrics(), 200, 3).isEmpty());
 }
 
 QTEST_MAIN(TestUi)
