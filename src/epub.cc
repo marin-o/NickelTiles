@@ -43,7 +43,9 @@ static QString nt_opf_path(QFile &f, const QList<NtZipEntry> &entries) {
     for (const NtZipEntry &en : entries) {
         if (en.name != QLatin1String("META-INF/container.xml")) continue;
         const QString xml = QString::fromUtf8(nt_zip_extract(f, en));
-        return nt_attr(xml.section(QStringLiteral("<rootfile"), 1, 1).section(QLatin1Char('>'), 0, 0), "full-path");
+        // \b keeps <rootfiles>, which encloses the element, from matching.
+        const QRegularExpression rootfile(QStringLiteral("<rootfile\\b[^>]*>"), QRegularExpression::CaseInsensitiveOption);
+        return nt_attr(rootfile.match(xml).captured(0), "full-path");
     }
     return QString();
 }
@@ -131,25 +133,35 @@ static QImage nt_fit_greyscale(QImage img, int maxSide) {
     return img.convertToFormat(QImage::Format_Indexed8, Qt::ThresholdDither);
 }
 
+// A ".none" marker remembers a book without a usable cover so it is not parsed
+// on every refresh. It holds the version that wrote it: a newer NickelTiles may
+// find a cover the older one missed, so a marker from another version is stale.
+static bool nt_marker_current(const QString &marker) {
+    QFile f(marker);
+    return f.open(QIODevice::ReadOnly) && f.readAll() == QByteArray(NH_VERSION);
+}
+
+static void nt_write_marker(const QString &marker) {
+    QFile f(marker);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) f.write(NH_VERSION);
+}
+
 QPixmap nt_epub_cover(const QString &epubPath, const QString &cacheDir, int maxSide) {
     QFileInfo fi(epubPath);
     if (!fi.exists()) return QPixmap();
     QDir().mkpath(cacheDir);
     const QString cacheFile = nt_cache_file(epubPath, fi, cacheDir);
-    // A ".none" marker remembers books without a usable cover, so they are not re-parsed.
     const QString noneMarker = cacheFile + QStringLiteral(".none");
     QPixmap cached(cacheFile);
     if (!cached.isNull()) return cached;
-    if (QFile::exists(noneMarker)) return QPixmap();
+    if (nt_marker_current(noneMarker)) return QPixmap();
 
     QString coverMember;
     const QByteArray imageData = nt_epub_cover_bytes(epubPath, &coverMember);
     QImage img = QImage::fromData(imageData);
     NT_DBG("epub: %s -> member '%s' (%d bytes) image %dx%d", qPrintable(epubPath), qPrintable(coverMember), imageData.size(), img.width(), img.height());
     if (img.isNull()) {
-        QFile none(noneMarker);
-        none.open(QIODevice::WriteOnly);
-        none.close();
+        nt_write_marker(noneMarker);
         return QPixmap();
     }
     img = nt_fit_greyscale(img, maxSide);
