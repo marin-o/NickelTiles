@@ -139,6 +139,11 @@ relies on.
 - Plato books open Plato itself, not the book (Plato has no open-at-launch
   option).
 
+## Contributing
+
+Bug reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Pull requests go to the `dev` branch.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

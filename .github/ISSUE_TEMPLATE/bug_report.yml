@@ -1,0 +1,45 @@
+name: Bug report
+description: Something does not work or looks wrong on your reader.
+labels: [bug]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Reader model
+      placeholder: Kobo Clara BW
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      description: Settings > Device information
+      placeholder: 4.45.23697
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: NickelTiles version
+      description: From KPM, or the release you installed
+      placeholder: v0.4.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Set nt_log:1 in .adds/nickel-tiles/config, restart, reproduce the problem, then paste or attach .adds/nickel-tiles/nickel-tiles.log. Screenshots saved in the same folder help too.
+      render: text
+  - type: textarea
+    id: addons
+    attributes:
+      label: Other add-ons
+      description: For example NickelMenu, NickelHome, KPM, KOReader, Plato.

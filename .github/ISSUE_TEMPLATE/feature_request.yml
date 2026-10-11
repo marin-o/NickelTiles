@@ -1,0 +1,16 @@
+name: Feature request
+description: An idea for NickelTiles.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like
+      description: What you want to do on your reader, and what is in the way today.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Reader model and firmware
+      description: Helps judge whether it can work on your device.
