@@ -22,6 +22,15 @@ QStringList ownCovers() {
     return QDir(QStringLiteral(NT_SCREENSAVER_DIR)).entryList(QStringList(QStringLiteral("nt-recent.*")), QDir::Files);
 }
 
+// Pictures the owner put in the folder. Nickel picks randomly among all images
+// there, so adding the book cover would change what they chose to see.
+bool ownerHasPictures() {
+    const QStringList files = QDir(QStringLiteral(NT_SCREENSAVER_DIR)).entryList(QDir::Files);
+    for (const QString &name : files)
+        if (!name.startsWith(QLatin1String("nt-recent.")) && !name.startsWith(QLatin1Char('.'))) return true;
+    return false;
+}
+
 void clearSleepCover() {
     QDir dir(QStringLiteral(NT_SCREENSAVER_DIR));
     const QStringList ours = ownCovers();
@@ -95,6 +104,11 @@ bool writeCover(const QByteArray &data, const QString &ext) {
 }
 
 void updateSleepCover(NtRecentSource source) {
+    if (ownerHasPictures()) {
+        NT_DBG("sleep cover: the folder has the owner's own pictures; leaving it alone");
+        clearSleepCover();
+        return;
+    }
     const NtRecentBook book = nt_recent_book(source);
     if (!book.valid || !nt_is_epub(book.path)) {
         NT_LOG("sleep cover: no recent EPUB; leaving Nickel's own cover");

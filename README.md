@@ -60,6 +60,10 @@ NickelMenu is optional; without it the grid has the built-in tiles and any
 
 ## Use
 
+The grid replaces Kobo's home rows. To keep Kobo's own home widgets under the
+tiles, turn off *Hide Kobo's home rows* in Tiles settings. Tiles size
+themselves to fill the screen's width; set a fixed size there if you prefer.
+
 | Action | What happens |
 | --- | --- |
 | Tap a tile | Runs it (the tile darkens while pressed) |
@@ -76,8 +80,9 @@ case with spaces as `-` (e.g. `kpm-status.png`), 200x200 recommended.
 Kobo only uses a custom sleep image when **Settings > Energy saving and
 privacy > Show book covers full screen** is on. NickelTiles keeps the image as
 `.kobo/screensaver/nt-recent.<ext>` and refreshes it as the reader goes to
-sleep. Turn it off on the settings page (or `nt_sleep_cover:0`); images you put
-in that folder yourself are left alone.
+sleep. If you keep your own pictures in that folder, NickelTiles stays out of
+it, so your sleep screens remain the ones you chose. Turn the feature off on
+the settings page (or `nt_sleep_cover:0`).
 
 ### Switched-off add-ons
 

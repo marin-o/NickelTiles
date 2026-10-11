@@ -2,8 +2,10 @@
 
 #include <QDateTime>
 #include <QGridLayout>
+#include <QGuiApplication>
 #include <QHash>
 #include <QList>
+#include <QScreen>
 #include <QShowEvent>
 #include <QSizePolicy>
 #include <QSpacerItem>
@@ -24,6 +26,13 @@
 #include "util.h"
 
 namespace {
+
+const int kMargin = 24;
+const int kSpacing = 16;
+
+int gridWidthFor(int columns, int px) {
+    return columns * px + (columns - 1) * kSpacing + 2 * kMargin;
+}
 
 // Whether a tile for `label` should be built: not already built, not hidden.
 // Records the label as built.
@@ -149,13 +158,13 @@ NtGrid::NtGrid(QWidget *homeView, QWidget *parent, const NtSettings &settings)
       m_recent(NULL), m_marked(NULL) {
     setObjectName(QStringLiteral("ntGrid"));
     m_layout->setObjectName(QStringLiteral("ntGridLayout"));
-    m_layout->setContentsMargins(24, 24, 24, 24);
-    m_layout->setHorizontalSpacing(16);
+    m_layout->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
+    m_layout->setHorizontalSpacing(kSpacing);
     m_layout->setVerticalSpacing(20);
 }
 
 void NtGrid::build() {
-    const int px = m_settings.tilePx;
+    const int px = nt_tile_size(m_settings.columns, m_settings.tilePx, nt_grid_width());
     const QStringList &hidden = m_settings.hidden;
     QStringList seen;
 
@@ -277,6 +286,21 @@ void nt_install_grid(QWidget *homeView) {
     }
     if (replacing) grid->show();
     NT_LOG("inserted grid at mainLayout index %d (rows hidden=%d)", index, settings.hideRows ? 1 : 0);
+}
+
+int nt_grid_width() {
+    const QScreen *screen = QGuiApplication::primaryScreen();
+    return screen ? screen->size().width() : 1072;
+}
+
+int nt_tile_size(int columns, int tilePx, int width) {
+    if (tilePx > 0) return tilePx;
+    const int fill = (width - 2 * kMargin - (columns - 1) * kSpacing) / qMax(1, columns);
+    return qBound(kNtTileMinPx, fill, kNtTileMaxPx);
+}
+
+bool nt_tiles_fit(int columns, int tilePx, int width) {
+    return gridWidthFor(columns, nt_tile_size(columns, tilePx, width)) <= width;
 }
 
 QStringList nt_all_tile_labels() {

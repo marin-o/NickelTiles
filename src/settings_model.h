@@ -27,7 +27,7 @@ struct NtSettings {
     NtRecentInfo recentInfo;       // nt_recent_info: its caption
     bool sleepCover = true;        // nt_sleep_cover
     int columns = 5;               // nt_columns
-    int tilePx = 180;              // nt_tile_px
+    int tilePx = 0;                // nt_tile_px: 0 = automatic (fills the width)
     QStringList hidden;            // hide: (repeatable)
     QStringList order;             // order: a|b|c
 };

@@ -71,6 +71,14 @@ QStringList parseOrder(const char *value) {
     return order;
 }
 
+// "auto", missing or invalid -> 0 (automatic).
+int parseTilePx(const char *value) {
+    if (!value) return 0;
+    bool ok = false;
+    const int px = QString::fromUtf8(value).trimmed().toInt(&ok);
+    return ok && px > 0 ? px : 0;
+}
+
 QString infoText(const NtRecentInfo &info) {
     QStringList parts;
     if (info.title) parts << QStringLiteral("title");
@@ -114,7 +122,7 @@ NtSettings nt_settings() {
     s.sleepCover = nt_config_bool(kKeySleepCover, defaults.sleepCover);
     s.columns = nt_config_int(kKeyColumns, defaults.columns);
     if (s.columns < 1) s.columns = 1;
-    s.tilePx = nt_config_int(kKeyTilePx, defaults.tilePx);
+    s.tilePx = parseTilePx(nt_config_get(kKeyTilePx));
     s.hidden = parseHidden();
     s.order = parseOrder(nt_config_get(kKeyOrder));
     return s;
@@ -131,7 +139,8 @@ bool nt_settings_save(const NtSettings &before, const NtSettings &after) {
     if (before.recentInfo != after.recentInfo) ok &= setValue(kKeyRecentInfo, infoText(after.recentInfo));
     if (before.sleepCover != after.sleepCover) ok &= setValue(kKeySleepCover, flag(after.sleepCover));
     if (before.columns != after.columns) ok &= setValue(kKeyColumns, QString::number(after.columns));
-    if (before.tilePx != after.tilePx) ok &= setValue(kKeyTilePx, QString::number(after.tilePx));
+    if (before.tilePx != after.tilePx)
+        ok &= setValue(kKeyTilePx, after.tilePx > 0 ? QString::number(after.tilePx) : QStringLiteral("auto"));
     if (before.hidden != after.hidden) ok &= saveHidden(after.hidden);
     if (before.order != after.order)
         ok &= after.order.isEmpty() ? nt_config_set(kKeyOrder, NULL, 0)

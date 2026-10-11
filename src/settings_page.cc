@@ -17,6 +17,7 @@
 #include <QStringList>
 
 #include "addons.h"
+#include "grid.h"
 #include "nickel.h"
 #include "pressable.h"
 #include "settings_model.h"
@@ -176,10 +177,16 @@ private:
         m_hidden = QSet<QString>::fromList(m_initial.hidden);
     }
 
-    // Would `columns` tiles of `px` fit across the home view?
     bool fits(int columns, int px) const {
-        const int width = m_view->width() > 0 ? m_view->width() : 1072;
-        return columns * px + (columns - 1) * 16 + 48 <= width;
+        return nt_tiles_fit(columns, px, nt_grid_width());
+    }
+
+    // The fixed size `step` px away from the current one; leaving automatic
+    // starts from the size automatic gives now.
+    void stepTileSize(int step) {
+        const int current = nt_tile_size(m_state.columns, m_state.tilePx, nt_grid_width());
+        m_state.tilePx = qBound(kNtTileMinPx, (current + step) / 20 * 20, kNtTileMaxPx);
+        refresh();
     }
 
     QLabel *label(const QString &text, int px, bool bold = false) {
@@ -264,10 +271,12 @@ private:
         h->addWidget(m_colsUp);
 
         h = row(v, QStringLiteral("Tile size"));
-        m_pxDown = button(QStringLiteral("−"), 90, [this]() { m_state.tilePx -= 20; refresh(); });
+        m_pxAuto = button(QStringLiteral("Auto"), 120, [this]() { m_state.tilePx = 0; refresh(); });
+        h->addWidget(m_pxAuto);
+        m_pxDown = button(QStringLiteral("−"), 90, [this]() { stepTileSize(-20); });
         h->addWidget(m_pxDown);
         m_pxValue = value(h);
-        m_pxUp = button(QStringLiteral("+"), 90, [this]() { m_state.tilePx += 20; refresh(); });
+        m_pxUp = button(QStringLiteral("+"), 90, [this]() { stepTileSize(20); });
         h->addWidget(m_pxUp);
     }
 
@@ -377,14 +386,14 @@ private:
 
     void refresh() {
         if (m_state.columns < 2) m_state.columns = 2;
-        if (m_state.tilePx < 120) m_state.tilePx = 120;
-        if (m_state.tilePx > 300) m_state.tilePx = 300;
+        const int px = nt_tile_size(m_state.columns, m_state.tilePx, nt_grid_width());
         m_colsValue->setText(QString::number(m_state.columns));
-        m_pxValue->setText(QString::number(m_state.tilePx));
+        m_pxValue->setText(m_state.tilePx > 0 ? QString::number(px) : QStringLiteral("Auto"));
+        m_pxAuto->setPressEnabled(m_state.tilePx > 0);
         m_colsDown->setPressEnabled(m_state.columns > 2);
         m_colsUp->setPressEnabled(fits(m_state.columns + 1, m_state.tilePx));
-        m_pxDown->setPressEnabled(m_state.tilePx > 120);
-        m_pxUp->setPressEnabled(m_state.tilePx < 300 && fits(m_state.columns, m_state.tilePx + 20));
+        m_pxDown->setPressEnabled(px > kNtTileMinPx);
+        m_pxUp->setPressEnabled(px < kNtTileMaxPx && fits(m_state.columns, px + 20));
         m_recent->setChecked(m_state.recent);
         m_source->setText(QString::fromUtf8(kSources[sourceIndex(m_state.recentSource)].name));
         m_source->setPressEnabled(m_state.recent);
@@ -457,7 +466,7 @@ private:
     NtSettings m_state;        // edited copy; `hidden` is edited as m_hidden
     QSet<QString> m_hidden;
     int m_page;
-    NtControl *m_colsDown, *m_colsUp, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
+    NtControl *m_colsDown, *m_colsUp, *m_pxAuto, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
     NtControl *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
     QLabel *m_repairNote;
     QLabel *m_colsValue, *m_pxValue, *m_pageLabel;

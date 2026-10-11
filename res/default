@@ -20,6 +20,7 @@ nt_log:0
 nt_actions:1
 
 # Hide Kobo's own home rows so the grid is the home screen (default 1).
+# 0 keeps Kobo's home widgets under the tiles.
 nt_hide_rows:1
 
 # "Continue reading" tile (default 1): the most recently opened book across
@@ -33,15 +34,20 @@ nt_recent_info:title,author,progress
 
 # Sleep screen shows the "Continue reading" book's cover (default 1). Needs
 # Settings > Energy saving and privacy > "Show book covers full screen" on;
-# the image is kept as .kobo/screensaver/nt-recent.<ext>.
+# the image is kept as .kobo/screensaver/nt-recent.<ext>. If you keep your own
+# pictures in that folder, NickelTiles leaves it alone.
 nt_sleep_cover:1
 
-# Grid shape.
+# Grid shape. nt_tile_px: a size in pixels (120-300), or auto to fill the
+# screen's width (default).
 nt_columns:5
-nt_tile_px:180
+nt_tile_px:auto
 
-# Hide a NickelMenu entry from the grid (repeatable):
-# hide:kpm - Status
+# Hide a NickelMenu entry from the grid (repeatable). KPM's helper entries
+# stay in the NickelMenu menu; its Package manager keeps a tile.
+hide:kpm - Check for updates
+hide:kpm - Update all
+hide:kpm - Status
 
 # Icon override (repeatable): icon:<label>:<png path>
 # icon:KOReader:/mnt/onboard/.adds/nickel-tiles/icons/koreader.png

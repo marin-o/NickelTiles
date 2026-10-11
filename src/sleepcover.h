@@ -5,7 +5,8 @@
 // image from .kobo/screensaver when that folder has any, else the cover of the
 // last book read in Nickel. NickelTiles keeps one image there,
 // nt-recent.<ext>, so the sleep screen follows the Continue reading book in
-// every app. Images the owner adds to the folder are left alone.
+// every app. If the owner keeps their own pictures in that folder, NickelTiles
+// stays out of it.
 
 #include "settings_model.h"
 
