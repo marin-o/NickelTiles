@@ -196,8 +196,9 @@ void NtSettingsTile::activate() {
 
 const char *const NtRecentTile::kLabel = "Continue reading";
 
-NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, NtRecentSource source, NtRecentInfo info)
-    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_source(source), m_info(info) {
+NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, NtRecentSource source, NtRecentInfo info,
+                           bool showCover)
+    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_source(source), m_info(info), m_showCover(showCover) {
     setIcon(nt_icon_for(label(), QString()));
 }
 
@@ -209,7 +210,7 @@ void NtRecentTile::refresh() {
         return;
     }
     QPixmap cover;
-    if (nt_is_epub(m_book.path))
+    if (m_showCover && nt_is_epub(m_book.path))
         cover = nt_epub_cover(m_book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
     setIcon(cover.isNull() ? nt_icon_for(label(), QString()) : cover);
     setVisible(true);

@@ -25,6 +25,7 @@ struct NtSettings {
     bool recent = true;            // nt_recent: Continue reading tile
     NtRecentSource recentSource = NtRecentSource::Any;   // nt_recent_source
     NtRecentInfo recentInfo;       // nt_recent_info: its caption
+    bool recentCover = true;       // nt_recent_cover: the book's cover, else a book icon
     bool sleepCover = true;        // nt_sleep_cover
     int columns = 5;               // nt_columns
     int tilePx = 0;                // nt_tile_px: 0 = automatic (fills the width)

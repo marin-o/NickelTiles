@@ -15,8 +15,8 @@ NickelHome.
   reboot, KPM, ...). Add or remove an entry and the grid follows.
 - **Continue reading.** One tile always holds your most recent book, whichever
   app you read it in: KOReader, Plato or Kobo's own reader. It shows the cover
-  with any of title, author and progress under it, and opens the book in the
-  app that last read it.
+  (or a book icon, if you prefer) with any of title, author and progress under
+  it, and opens the book in the app that last read it.
 - **Sleep screen follows that book.** With Kobo's *Show book covers full
   screen* setting on, the sleep screen shows the same book's cover, not just
   the last book opened in Kobo's reader.
