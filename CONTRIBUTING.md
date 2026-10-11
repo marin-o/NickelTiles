@@ -8,15 +8,16 @@ are as valuable as code: so far NickelTiles has run on one reader.
 | Branch | Holds | Changes arrive by |
 | --- | --- | --- |
 | `dev` (default) | The next release | Pull requests from your branch |
-| `main` | Released code; every release is a `vX.Y.Z` tag here | A pull request from `dev`, made by the maintainer |
+| `main` | Released code; every release is a `vX.Y.Z` tag here | Maintainers only, by fast-forwarding to a tested `dev` |
 
-Open pull requests against **`dev`**. Both branches are protected: no direct
-pushes, the GitHub build must pass, and history is never rewritten. Pull
-requests into `dev` are squash-merged, so one pull request becomes one commit.
+Open pull requests against **`dev`**: it accepts changes only through pull
+requests whose build and tests pass, and they are squash-merged, so one pull
+request becomes one commit. `main` can only be updated by maintainers, only to
+commits whose build and tests passed, and its history is never rewritten.
 
-Releases: the maintainer merges `dev` into `main` and tags the merge
-(`vX.Y.Z`); GitHub Actions then builds `KoboRoot.tgz` and publishes the
-release, which KPM picks up.
+Releases: a maintainer fast-forwards `main` to `dev` once it has been tested on
+a reader, and tags it (`vX.Y.Z`); GitHub Actions then builds `KoboRoot.tgz`
+and publishes the release, which KPM picks up.
 
 ## Building
 
