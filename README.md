@@ -107,8 +107,9 @@ NICKELTC_BASE=/path/to/nickeltc LIBNICKEL=/path/to/libnickel.so.1.0.0 tools/chec
 `tools/build.sh` patches the NickelHook submodule to accept weakly bound
 symbols (the home page hook, `Ui_HomePageView::setupUi`, is one).
 `tools/check-syms.sh` checks every hooked symbol against a firmware's
-`libnickel.so` and the package contents. `docs/homepage-map.md` describes the
-home screen widget tree this relies on.
+`libnickel.so` and the package contents. `docs/architecture.md` maps the
+modules; `docs/homepage-map.md` describes the home screen widget tree this
+relies on.
 
 ## Notes
 

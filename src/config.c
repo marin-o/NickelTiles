@@ -13,13 +13,14 @@
 
 static nt_entry_t *entries = NULL, *entries_tail = NULL;
 static nt_tile_t *tiles = NULL, *tiles_tail = NULL;
-static int tile_count = 0;
 static bool parsed = false;
 static bool problem = false;
 bool nt_log_verbose = false;
 
+// nt_draw is no longer used; still accepted so older configs load without warnings.
 static const char *const known_keys[] = {
-    "nt_enabled", "nt_log", "nt_draw", "nt_actions", "nt_hide_rows", "nt_recent",
+    "nt_draw",
+    "nt_enabled", "nt_log", "nt_actions", "nt_hide_rows", "nt_recent",
     "nt_columns", "nt_tile_px", "nt_recent_source", "nt_recent_info", "nt_sleep_cover", "hide", "icon", "order", "tile", NULL,
 };
 
@@ -60,7 +61,6 @@ static void append_tile(char *val, int lineno) {
     }
     if (tiles_tail) tiles_tail->next = t; else tiles = t;
     tiles_tail = t;
-    tile_count++;
 }
 
 // Seeds NT_CONFIG_DIR/config from NT_CONFIG_DIR/default atomically (temp file,
@@ -269,16 +269,8 @@ bool nt_config_set(const char *key, const char *const *vals, int n) {
     return true;
 }
 
-bool nt_config_write_order(const char *order) {
-    return nt_config_set("order", &order, 1);
-}
 
 const nt_tile_t *nt_config_tiles(void) {
     if (!parsed) parse();
     return tiles;
-}
-
-int nt_config_tile_count(void) {
-    if (!parsed) parse();
-    return tile_count;
 }

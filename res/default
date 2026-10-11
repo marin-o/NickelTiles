@@ -16,8 +16,7 @@
 # Verbose log to nickel-tiles.log in this folder (default 0).
 nt_log:0
 
-# Insert the grid (default 1) and run actions on tap (default 1).
-nt_draw:1
+# Run a tile's action when it is tapped (default 1).
 nt_actions:1
 
 # Hide Kobo's own home rows so the grid is the home screen (default 1).

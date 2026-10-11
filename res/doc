@@ -34,7 +34,7 @@
 #
 # Configuration: KOBOeReader/.adds/nickel-tiles/config (key:value, # comments,
 # reboot to apply). See the default file for every key.
-#   nt_enabled, nt_log, nt_draw, nt_actions, nt_hide_rows, nt_recent, nt_recent_source, nt_recent_info,
+#   nt_enabled, nt_log, nt_actions, nt_hide_rows, nt_recent, nt_recent_source, nt_recent_info,
 #   nt_sleep_cover, nt_columns, nt_tile_px, hide:<label>, icon:<label>:<png>, order:<a>|<b>|..,
 #   tile:<label>:<icon>:<command>
 #
