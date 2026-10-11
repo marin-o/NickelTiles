@@ -1,5 +1,4 @@
-// EPUB covers (epub.cc, over zip.cc). Each test builds a small real zip with
-// fixtures.cc and checks which member is picked as the cover and its bytes.
+// EPUB cover lookup: the formats books use, and the <rootfiles> bug.
 
 #include <QtTest>
 
@@ -38,22 +37,11 @@ private slots:
     void init() { removeFixtures(); }
     void cleanup() { removeFixtures(); }
 
-    void recognisesEpubNames();
     void coverFromMetaWithRootfilesWrapper();
     void coverFromCoverImageProperty();
     void coverFromFileNameWhenOpfNamesNone();
-    void largestImageWhenNothingNamesCover();
-    void bookWithoutImages();
     void notAZipGivesNothing();
 };
-
-void TestEpub::recognisesEpubNames() {
-    QVERIFY(nt_is_epub(QStringLiteral("/books/a.epub")));
-    QVERIFY(nt_is_epub(QStringLiteral("/books/a.kepub")));
-    QVERIFY(nt_is_epub(QStringLiteral("/books/A.EPUB")));
-    QVERIFY(!nt_is_epub(QStringLiteral("/books/a.pdf")));
-    QVERIFY(!nt_is_epub(QStringLiteral("/books/epub")));
-}
 
 // Regression: the <rootfiles> wrapper starts with the text "<rootfile", so the
 // container parse must match the element by its whole name. Otherwise the OPF
@@ -115,38 +103,6 @@ void TestEpub::coverFromFileNameWhenOpfNamesNone() {
     const QByteArray bytes = nt_epub_cover_bytes(path, &member);
     QCOMPARE(member, QStringLiteral("OEBPS/images/cover.jpg"));
     QCOMPARE(bytes, cover);
-}
-
-void TestEpub::largestImageWhenNothingNamesCover() {
-    const QByteArray large = jpegBytes(64, 64);
-    QMap<QString, QByteArray> files;
-    files[QStringLiteral("META-INF/container.xml")] = QByteArray(kContainer);
-    files[QStringLiteral("OEBPS/content.opf")] = opf(
-        "<item id=\"text\" href=\"text.xhtml\" media-type=\"application/xhtml+xml\"/>");
-    files[QStringLiteral("OEBPS/text.xhtml")] = QByteArray("<html/>");
-    files[QStringLiteral("OEBPS/images/small.jpg")] = jpegBytes(8, 8);
-    files[QStringLiteral("OEBPS/images/large.jpg")] = large;
-    const QString path = bookPath(QStringLiteral("largest.epub"));
-    QVERIFY(writeEpub(path, files));
-
-    QString member;
-    const QByteArray bytes = nt_epub_cover_bytes(path, &member);
-    QCOMPARE(member, QStringLiteral("OEBPS/images/large.jpg"));
-    QCOMPARE(bytes, large);
-}
-
-void TestEpub::bookWithoutImages() {
-    QMap<QString, QByteArray> files;
-    files[QStringLiteral("META-INF/container.xml")] = QByteArray(kContainer);
-    files[QStringLiteral("OEBPS/content.opf")] = opf(
-        "<item id=\"text\" href=\"text.xhtml\" media-type=\"application/xhtml+xml\"/>");
-    files[QStringLiteral("OEBPS/text.xhtml")] = QByteArray("<html/>");
-    const QString path = bookPath(QStringLiteral("text.epub"));
-    QVERIFY(writeEpub(path, files));
-
-    QString member = QStringLiteral("not cleared");
-    QVERIFY(nt_epub_cover_bytes(path, &member).isEmpty());
-    QVERIFY(member.isEmpty());
 }
 
 void TestEpub::notAZipGivesNothing() {

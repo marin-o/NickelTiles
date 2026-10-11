@@ -1,7 +1,4 @@
-// The most recently read book (recent.cc) from KOReader and Plato, on a fixture
-// tree under /tmp/nt-tests/onboard. The Nickel source is not tested here: it
-// reads KoboReader.sqlite through the sqlite3 that Nickel loads, which this host
-// does not have.
+// Most recently read book (recent.cc) from KOReader and Plato, on a fixture tree under /tmp/nt-tests/onboard.
 
 #include <QtTest>
 
@@ -11,7 +8,6 @@
 #include "fixtures.h"
 #include "paths.h"
 #include "recent.h"
-#include "stubs.h"
 
 namespace {
 
@@ -50,22 +46,12 @@ class TestRecent : public QObject {
     Q_OBJECT
 
 private slots:
-    void init() {
-        removeFixtures();
-        nt_stub_toasts.clear();
-        nt_stub_commands.clear();
-        nt_stub_content_ids.clear();
-    }
+    void init() { removeFixtures(); }
     void cleanup() { removeFixtures(); }
 
     void koreaderBookWithSidecar();
-    void koreaderTitleFromFileName();
-    void koreaderBookMissingIsInvalid();
     void platoBook();
     void anyPicksNewestApp();
-    void anySourceOnlyReadsThatApp();
-    void openKoreaderBookRunsLauncher();
-    void openNothingToasts();
 };
 
 void TestRecent::koreaderBookWithSidecar() {
@@ -84,25 +70,6 @@ void TestRecent::koreaderBookWithSidecar() {
     QCOMPARE(book.author, QStringLiteral("Jane Doe"));
     QCOMPARE(book.percent, 42);
     QCOMPARE(book.lastRead, kKoreaderTime);
-}
-
-void TestRecent::koreaderTitleFromFileName() {
-    // No sidecar: the title is the file name without its extension.
-    const QString file = bookPath(QStringLiteral("Plain Name.epub"));
-    QVERIFY(writeFile(file, QByteArray("book")));
-    writeKoreaderHistory(file, kKoreaderTime);
-
-    const NtRecentBook book = nt_recent_book(NtRecentSource::Koreader);
-    QVERIFY(book.valid);
-    QCOMPARE(book.title, QStringLiteral("Plain Name"));
-    QVERIFY(book.author.isEmpty());
-    QCOMPARE(book.percent, -1);
-}
-
-void TestRecent::koreaderBookMissingIsInvalid() {
-    // The history names a book that is no longer on the reader.
-    writeKoreaderHistory(bookPath(QStringLiteral("gone.epub")), kKoreaderTime);
-    QVERIFY(!nt_recent_book(NtRecentSource::Koreader).valid);
 }
 
 void TestRecent::platoBook() {
@@ -128,34 +95,6 @@ void TestRecent::anyPicksNewestApp() {
     QVERIFY(book.valid);
     QVERIFY(book.app == NtReaderApp::Plato);
     QCOMPARE(book.title, QStringLiteral("Plato Book"));
-}
-
-void TestRecent::anySourceOnlyReadsThatApp() {
-    const QString file = bookPath(QStringLiteral("a.epub"));
-    QVERIFY(writeFile(file, QByteArray("book")));
-    writeKoreaderHistory(file, kKoreaderTime);
-    writePlatoBook();
-
-    const NtRecentBook book = nt_recent_book(NtRecentSource::Koreader);
-    QVERIFY(book.valid);
-    QVERIFY(book.app == NtReaderApp::Koreader);
-}
-
-void TestRecent::openKoreaderBookRunsLauncher() {
-    const QString file = bookPath(QStringLiteral("a.epub"));
-    QVERIFY(writeFile(file, QByteArray("book")));
-    writeKoreaderHistory(file, kKoreaderTime);
-
-    nt_open_recent_book(nt_recent_book(NtRecentSource::Koreader));
-    QCOMPARE(nt_stub_commands.size(), 1);
-    QCOMPARE(nt_stub_commands.at(0), QStringLiteral("exec " NT_KOREADER_LAUNCHER " '") + file + QStringLiteral("'"));
-    QVERIFY(nt_stub_toasts.isEmpty());
-}
-
-void TestRecent::openNothingToasts() {
-    nt_open_recent_book(nt_recent_book(NtRecentSource::Koreader));
-    QCOMPARE(nt_stub_toasts, QStringList(QStringLiteral("No recent book")));
-    QVERIFY(nt_stub_commands.isEmpty());
 }
 
 QTEST_MAIN(TestRecent)

@@ -47,8 +47,11 @@ sudo apt install qtbase5-dev qtbase5-dev-tools pkg-config g++ make python3
 make -C tests check
 ```
 
-New logic of that kind comes with a test, and a bug fix with a test that
-would have caught the bug.
+Tests are kept few on purpose. Add one when it guards a bug that actually
+happened (a bug fix comes with the test that would have caught it) or a file
+format NickelTiles does not control, such as EPUBs, KOReader or Plato state,
+NickelMenu files, or the config file it edits in place. Trivial code,
+defaults and every edge case of a helper do not need tests.
 
 ## Testing on a reader
 

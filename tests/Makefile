@@ -53,7 +53,7 @@ $(OBJ)/test_%.o: test_%.cc $(OBJ)/test_%.moc
 $(OBJ)/fixtures.o: fixtures.cc fixtures.h | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
-$(OBJ)/stubs.o: stubs/stubs.cc stubs/stubs.h | $(OBJ)
+$(OBJ)/stubs.o: stubs/stubs.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
 $(OBJ)/%.o: ../src/%.cc | $(OBJ)
