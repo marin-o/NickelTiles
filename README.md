@@ -31,9 +31,10 @@ NickelHome.
 
 ## Status
 
-Early. Developed and tested on firmware **4.45.23697** only. Other recent
+Early. Developed and tested on one reader: a Tolino Shine 5 (T302, Clara BW
+hardware) running Kobo's Clara BW firmware **4.45.23697**. Other recent
 firmware (4.23.15505 and later, which share the home screen layout) may work
-but is untested. Reports welcome.
+but is untested. Reports welcome, even "it works".
 
 NickelHook's failsafe applies: if Nickel crashes within 3 seconds of the mod
 loading, the mod disables itself (its library is renamed to
@@ -43,13 +44,18 @@ package again re-enables it.
 ## Install
 
 **With KPM** (the Kobo package manager), add the repository, then fetch and
-stage the latest release, and reboot:
+stage the latest release, and restart the reader:
 
 ```sh
 kpm add https://github.com/marin-o/NickelTiles --name nickeltiles
 kpm check
-kpm update nickeltiles --reboot
+kpm update nickeltiles
 ```
+
+Updates arrive the same way (`kpm check`, `kpm update nickeltiles`, restart).
+Restarting yourself rather than with `--reboot` (or KPM's "Update all" menu
+entry, which uses it) avoids a KPM 0.11.0 issue where the reboot leaves its
+lock file behind and KPM keeps reporting the update as staged.
 
 **By hand**: download `KoboRoot.tgz` from the latest release, copy it into the
 `.kobo` folder on the reader over USB, eject and unplug. The reader installs it
