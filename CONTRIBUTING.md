@@ -34,6 +34,25 @@ Or with [NickelTC](https://github.com/pgaskin/NickelTC) unpacked locally:
 
 The build uses `-Werror`; a pull request must build without warnings.
 
+## Automated tests
+
+`tests/` holds host tests (Qt Test) for the logic that does not need a
+reader: settings and config files, NickelMenu parsing, EPUB covers, recent
+books, word wrap and grid sizes. They run on every push and pull request
+(the Tests workflow), and locally on a Linux machine with Qt 5 development
+packages:
+
+```sh
+sudo apt install qtbase5-dev qtbase5-dev-tools pkg-config g++ make python3
+make -C tests check
+```
+
+Tests are kept few on purpose. Add one when it guards a bug that actually
+happened (a bug fix comes with the test that would have caught it) or a file
+format NickelTiles does not control, such as EPUBs, KOReader or Plato state,
+NickelMenu files, or the config file it edits in place. Trivial code,
+defaults and every edge case of a helper do not need tests.
+
 ## Testing on a reader
 
 1. Copy `KoboRoot.tgz` into `.kobo` on the reader, eject, unplug. It installs
@@ -65,6 +84,10 @@ Read [docs/architecture.md](docs/architecture.md) first. In short:
   disables the feature that needs it. Nickel must keep working on firmware
   where a symbol is absent.
 - Comments explain why, not what. No dead or commented-out code.
+- No duplicated code: if two places need the same thing, it becomes one
+  function in the right module. Pass a struct (often `NtSettings`) rather than
+  adding a third or fourth loose parameter.
+- Keep functions small; if one needs comments to separate its parts, split it.
 
 ## Safety rules
 

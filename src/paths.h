@@ -4,7 +4,9 @@
 // Fixed locations on the reader. NT_CONFIG_DIR (the mod's own folder) comes
 // from the Makefile. Macros, so they work with QStringLiteral and in C.
 
+#ifndef NT_ONBOARD   // tests point it at a fixture tree
 #define NT_ONBOARD              "/mnt/onboard"
+#endif
 #define NT_NICKELMENU_DIR       NT_ONBOARD "/.adds/nm"
 #define NT_KOREADER_HISTORY     NT_ONBOARD "/.adds/koreader/history.lua"
 #define NT_KOREADER_LAUNCHER    NT_ONBOARD "/.adds/koreader/koreader.sh"

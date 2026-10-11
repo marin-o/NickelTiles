@@ -47,6 +47,10 @@ const nt_tile_t *nt_config_tiles(void);
 // Atomic (temp file, fsync, rename); the cached config is updated too.
 bool nt_config_set(const char *key, const char *const *vals, int n);
 
+// Drops the cached config (entries and tiles) so the next access re-reads the
+// file. Only the host tests need it, after they write a fixture config.
+void nt_config_reload(void);
+
 #ifdef __cplusplus
 }
 #endif

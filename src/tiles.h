@@ -95,14 +95,15 @@ private:
     std::function<void()> m_open;
 };
 
-// Continue reading: the most recent book, with its cover or (when `showCover`
-// is off, or the book has none) a book icon; hidden when there is no book.
-// refresh() re-reads the apps' records.
+// Continue reading: the most recent book, with its cover or (when the recent
+// cover setting is off, or the book has none) a book icon; hidden when there
+// is no book. Takes the recent: settings (source, caption, cover) from
+// `settings`. refresh() re-reads the apps' records.
 class NtRecentTile : public NtTile {
 public:
     static const char *const kLabel;
 
-    NtRecentTile(QWidget *parent, NtTileHost *host, int px, NtRecentSource source, NtRecentInfo info, bool showCover);
+    NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings);
     void refresh();
     void activate() override;
 
@@ -110,9 +111,9 @@ protected:
     QStringList caption(const QFontMetrics &fm, int width) const override;
 
 private:
-    NtRecentSource m_source;
-    NtRecentInfo m_info;
-    bool m_showCover;
+    NtRecentSource m_recentSource;
+    NtRecentInfo m_recentInfo;
+    bool m_recentCover;
     NtRecentBook m_book;
 };
 
