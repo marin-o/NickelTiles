@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+    - name: Install Qt 5, g++ and python3
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qtbase5-dev qtbase5-dev-tools pkg-config g++ make python3
+    - name: Test
+      run: make -C tests check

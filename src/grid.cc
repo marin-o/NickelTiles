@@ -27,13 +27,6 @@
 
 namespace {
 
-const int kMargin = 24;
-const int kSpacing = 16;
-
-int gridWidthFor(int columns, int px) {
-    return columns * px + (columns - 1) * kSpacing + 2 * kMargin;
-}
-
 // Whether a tile for `label` should be built: not already built, not hidden.
 // Records the label as built.
 bool nt_claim_label(const QString &label, const QStringList &hidden, QStringList *seen) {
@@ -158,8 +151,8 @@ NtGrid::NtGrid(QWidget *homeView, QWidget *parent, const NtSettings &settings)
       m_recent(NULL), m_marked(NULL) {
     setObjectName(QStringLiteral("ntGrid"));
     m_layout->setObjectName(QStringLiteral("ntGridLayout"));
-    m_layout->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
-    m_layout->setHorizontalSpacing(kSpacing);
+    m_layout->setContentsMargins(kNtGridMargin, kNtGridMargin, kNtGridMargin, kNtGridMargin);
+    m_layout->setHorizontalSpacing(kNtGridSpacing);
     m_layout->setVerticalSpacing(20);
 }
 
@@ -169,8 +162,7 @@ void NtGrid::build() {
     QStringList seen;
 
     if (m_settings.recent) {
-        m_recent = new NtRecentTile(this, this, px, m_settings.recentSource, m_settings.recentInfo,
-                                    m_settings.recentCover);
+        m_recent = new NtRecentTile(this, this, px, m_settings);
         m_tiles << m_recent;
     }
     for (const NtEntry &e : nt_nickelmenu_entries())
@@ -292,16 +284,6 @@ void nt_install_grid(QWidget *homeView) {
 int nt_grid_width() {
     const QScreen *screen = QGuiApplication::primaryScreen();
     return screen ? screen->size().width() : 1072;
-}
-
-int nt_tile_size(int columns, int tilePx, int width) {
-    if (tilePx > 0) return tilePx;
-    const int fill = (width - 2 * kMargin - (columns - 1) * kSpacing) / qMax(1, columns);
-    return qBound(kNtTileMinPx, fill, kNtTileMaxPx);
-}
-
-bool nt_tiles_fit(int columns, int tilePx, int width) {
-    return gridWidthFor(columns, nt_tile_size(columns, tilePx, width)) <= width;
 }
 
 QStringList nt_all_tile_labels() {

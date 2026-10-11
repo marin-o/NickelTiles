@@ -11,7 +11,8 @@
 ## Checklist
 
 - [ ] Targets `dev`
-- [ ] Builds without warnings
+- [ ] Builds without warnings, and the Tests workflow passes
+- [ ] New logic or a bug fix comes with a test in `tests/`
 - [ ] Tested on a reader (or explained why not)
 - [ ] `README.md`, `res/doc` and `res/default` updated if behaviour or settings changed
 - [ ] Follows the safety rules in CONTRIBUTING.md (no library rescans, writes only in NickelTiles' own folders)

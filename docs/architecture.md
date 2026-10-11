@@ -29,6 +29,7 @@ Each `.h` in `src/` documents its module; this is the map.
 | `addons` | Finds and restores NickelHook add-ons a crash left switched off |
 | `pressable` | Touch handling shared by every tappable widget (Nickel sends only `QTouchEvent`s) |
 | `ui` | Fonts, word wrap, debug screenshots |
+| `layout` | Tile size and grid fit arithmetic, shared by the grid and the settings page |
 | `tiles` | The tile widgets |
 | `grid` | The grid on the home page: building, arranging, inserting into Nickel's layout |
 | `settings_page` | The on-device settings page |

@@ -111,6 +111,19 @@ private:
     bool m_checked;
 };
 
+NtControl *ntButton(QWidget *parent, const QString &text, int width, std::function<void()> onTap) {
+    NtControl *b = new NtControl(parent, NtControl::Button, text, onTap);
+    b->setFixedWidth(width);
+    return b;
+}
+
+QLabel *ntLabel(QWidget *parent, const QString &text, int px, bool bold = false) {
+    QLabel *l = new QLabel(text, parent);
+    l->setFont(nt_font(parent, px, bold));
+    l->setWordWrap(true);
+    return l;
+}
+
 // Display names, in the order the source button cycles through them.
 struct SourceName { NtRecentSource source; const char *name; };
 const SourceName kSources[] = {
@@ -129,10 +142,98 @@ NtRecentSource nextSource(NtRecentSource source) {
     return kSources[(sourceIndex(source) + 1) % kSourceCount].source;
 }
 
+// The paged "Tiles to show" list: one page of check rows at a time. A checked
+// row is a tile that is shown; the set of hidden labels is edited in place.
+class NtTileList {
+public:
+    NtTileList(QWidget *parent, const QStringList &labels, const QStringList &hidden)
+        : m_labels(labels), m_hidden(QSet<QString>::fromList(hidden)), m_page(0) {
+        m_title = ntLabel(parent, QStringLiteral("Tiles to show"), 32, true);
+        m_prev = ntButton(parent, QStringLiteral("‹"), 90, [this]() { m_page--; refresh(); });
+        m_pageLabel = ntLabel(parent, QString(), 26);
+        m_pageLabel->setAlignment(Qt::AlignCenter);
+        m_pageLabel->setFixedWidth(120);
+        m_next = ntButton(parent, QStringLiteral("›"), 90, [this]() { m_page++; refresh(); });
+        for (int i = 0; i < kTilesPerPage; i++)
+            m_checks << new NtControl(parent, NtControl::Check, QString(), [this, i]() { toggleTile(i); });
+    }
+
+    void addTo(QVBoxLayout *v) {
+        QHBoxLayout *listHead = new QHBoxLayout();
+        listHead->addWidget(m_title, 1);
+        listHead->addWidget(m_prev);
+        listHead->addWidget(m_pageLabel);
+        listHead->addWidget(m_next);
+        v->addLayout(listHead);
+
+        QGridLayout *grid = new QGridLayout();
+        grid->setHorizontalSpacing(24);
+        grid->setVerticalSpacing(4);
+        for (int i = 0; i < m_checks.size(); i++)
+            grid->addWidget(m_checks.at(i), i % (kTilesPerPage / 2), i / (kTilesPerPage / 2));
+        v->addLayout(grid);
+        v->addStretch(1);
+    }
+
+    void refresh() {
+        const int pages = m_labels.isEmpty() ? 1 : (m_labels.size() + kTilesPerPage - 1) / kTilesPerPage;
+        if (m_page >= pages) m_page = pages - 1;
+        if (m_page < 0) m_page = 0;
+        m_prev->setVisible(pages > 1);
+        m_next->setVisible(pages > 1);
+        m_pageLabel->setVisible(pages > 1);
+        m_prev->setPressEnabled(m_page > 0);
+        m_next->setPressEnabled(m_page + 1 < pages);
+        m_pageLabel->setText(QString::number(m_page + 1) + QStringLiteral(" / ") + QString::number(pages));
+        for (int i = 0; i < m_checks.size(); i++) {
+            const int index = m_page * kTilesPerPage + i;
+            NtControl *c = m_checks.at(i);
+            if (index < m_labels.size()) {
+                c->setText(m_labels.at(index));
+                c->setChecked(!m_hidden.contains(m_labels.at(index)));
+                c->setVisible(true);
+            } else {
+                c->setVisible(false);
+            }
+        }
+    }
+
+    // The hidden list in the order it is written. Hide: lines for tiles that
+    // are not listed now are kept (an entry that was removed may come back),
+    // in the order they had; then the listed tiles in list order.
+    QStringList hiddenAfter(const QStringList &initialHidden) const {
+        if (m_hidden == QSet<QString>::fromList(initialHidden)) return initialHidden;
+        QStringList out;
+        for (const QString &l : initialHidden)
+            if (!m_labels.contains(l)) out << l;
+        for (const QString &l : m_labels)
+            if (m_hidden.contains(l)) out << l;
+        return out;
+    }
+
+private:
+    // Flips the tile in slot `slot` of the current page.
+    void toggleTile(int slot) {
+        const int index = m_page * kTilesPerPage + slot;
+        if (index >= m_labels.size()) return;
+        const QString &l = m_labels.at(index);
+        if (m_hidden.contains(l)) m_hidden.remove(l);
+        else m_hidden.insert(l);
+        refresh();
+    }
+
+    QStringList m_labels;
+    QSet<QString> m_hidden;
+    int m_page;
+    QLabel *m_title, *m_pageLabel;
+    NtControl *m_prev, *m_next;
+    QList<NtControl*> m_checks;
+};
+
 class NtSettingsView : public QWidget {
 public:
     NtSettingsView(QWidget *view, const QStringList &labels, std::function<void()> onSaved)
-        : QWidget(view), m_view(view), m_labels(labels), m_onSaved(onSaved), m_page(0) {
+        : QWidget(view), m_view(view), m_labels(labels), m_onSaved(onSaved), m_tiles(0) {
         setObjectName(QStringLiteral("ntSettings"));
         setAttribute(Qt::WA_AcceptTouchEvents, true);
         load();
@@ -141,6 +242,10 @@ public:
         // Leaving the home screen (Nickel's own navigation) closes the page
         // without saving, so it can never be left behind.
         view->installEventFilter(this);
+    }
+
+    ~NtSettingsView() {
+        delete m_tiles;
     }
 
     bool eventFilter(QObject *watched, QEvent *e) override {
@@ -174,7 +279,6 @@ private:
     void load() {
         m_initial = nt_settings();
         m_state = m_initial;
-        m_hidden = QSet<QString>::fromList(m_initial.hidden);
     }
 
     bool fits(int columns, int px) const {
@@ -189,39 +293,40 @@ private:
         refresh();
     }
 
-    QLabel *label(const QString &text, int px, bool bold = false) {
-        QLabel *l = new QLabel(text, this);
-        l->setFont(nt_font(this, px, bold));
-        l->setWordWrap(true);
-        return l;
-    }
-
     // One settings row: name (and an optional note under it) on the left,
-    // controls on the right.
-    QHBoxLayout *row(QVBoxLayout *into, const QString &name, const QString &note = QString()) {
+    // controls on the right. If noteOut is given, it receives the note label
+    // so the note can be set later; the label is made even when the note is
+    // empty.
+    QHBoxLayout *row(QVBoxLayout *into, const QString &name, const QString &note = QString(), QLabel **noteOut = 0) {
         QHBoxLayout *h = new QHBoxLayout();
         h->setSpacing(14);
         QVBoxLayout *text = new QVBoxLayout();
         text->setSpacing(2);
-        text->addWidget(label(name, 32));
-        if (!note.isEmpty()) text->addWidget(label(note, 22));
+        text->addWidget(ntLabel(this, name, 32));
+        if (!note.isEmpty() || noteOut) {
+            QLabel *n = ntLabel(this, note, 22);
+            text->addWidget(n);
+            if (noteOut) *noteOut = n;
+        }
         h->addLayout(text, 1);
         into->addLayout(h);
         return h;
-    }
-
-    NtControl *button(const QString &text, int width, std::function<void()> onTap) {
-        NtControl *b = new NtControl(this, NtControl::Button, text, onTap);
-        b->setFixedWidth(width);
-        return b;
     }
 
     NtControl *toggle(std::function<void()> onTap) {
         return new NtControl(this, NtControl::Toggle, QString(), onTap);
     }
 
+    // A Check control in row `h` that flips *flag on each tap.
+    NtControl *flagCheck(QHBoxLayout *h, const QString &text, int width, bool *flag) {
+        NtControl *c = new NtControl(this, NtControl::Check, text, [this, flag]() { *flag = !*flag; refresh(); });
+        c->setFixedWidth(width);
+        h->addWidget(c);
+        return c;
+    }
+
     QLabel *value(QHBoxLayout *h) {
-        QLabel *v = label(QString(), 32, true);
+        QLabel *v = ntLabel(this, QString(), 32, true);
         v->setAlignment(Qt::AlignCenter);
         v->setFixedWidth(110);
         h->addWidget(v);
@@ -245,7 +350,7 @@ private:
         v->setContentsMargins(32, inset + 8, 32, 24);
         v->setSpacing(14);
 
-        v->addWidget(label(QStringLiteral("Tiles settings"), 40, true));
+        v->addWidget(ntLabel(this, QStringLiteral("Tiles settings"), 40, true));
         buildSizeRows(v);
         buildRecentRows(v);
         buildRepairRow(v);
@@ -264,19 +369,19 @@ private:
 
     void buildSizeRows(QVBoxLayout *v) {
         QHBoxLayout *h = row(v, QStringLiteral("Tiles per row"));
-        m_colsDown = button(QStringLiteral("−"), 90, [this]() { m_state.columns--; refresh(); });
+        m_colsDown = ntButton(this, QStringLiteral("−"), 90, [this]() { m_state.columns--; refresh(); });
         h->addWidget(m_colsDown);
         m_colsValue = value(h);
-        m_colsUp = button(QStringLiteral("+"), 90, [this]() { m_state.columns++; refresh(); });
+        m_colsUp = ntButton(this, QStringLiteral("+"), 90, [this]() { m_state.columns++; refresh(); });
         h->addWidget(m_colsUp);
 
         h = row(v, QStringLiteral("Tile size"));
-        m_pxAuto = button(QStringLiteral("Auto"), 120, [this]() { m_state.tilePx = 0; refresh(); });
+        m_pxAuto = ntButton(this, QStringLiteral("Auto"), 120, [this]() { m_state.tilePx = 0; refresh(); });
         h->addWidget(m_pxAuto);
-        m_pxDown = button(QStringLiteral("−"), 90, [this]() { stepTileSize(-20); });
+        m_pxDown = ntButton(this, QStringLiteral("−"), 90, [this]() { stepTileSize(-20); });
         h->addWidget(m_pxDown);
         m_pxValue = value(h);
-        m_pxUp = button(QStringLiteral("+"), 90, [this]() { stepTileSize(20); });
+        m_pxUp = ntButton(this, QStringLiteral("+"), 90, [this]() { stepTileSize(20); });
         h->addWidget(m_pxUp);
     }
 
@@ -286,22 +391,14 @@ private:
         h->addWidget(m_recent);
 
         h = row(v, QStringLiteral("Most recent book from"));
-        m_source = button(QString(), 314, [this]() { m_state.recentSource = nextSource(m_state.recentSource); refresh(); });
+        m_source = ntButton(this, QString(), 314, [this]() { m_state.recentSource = nextSource(m_state.recentSource); refresh(); });
         h->addWidget(m_source);
 
         h = row(v, QStringLiteral("Tile shows"));
-        m_infoCover = new NtControl(this, NtControl::Check, QStringLiteral("Cover"), [this]() { m_state.recentCover = !m_state.recentCover; refresh(); });
-        m_infoTitle = new NtControl(this, NtControl::Check, QStringLiteral("Title"), [this]() { m_state.recentInfo.title = !m_state.recentInfo.title; refresh(); });
-        m_infoAuthor = new NtControl(this, NtControl::Check, QStringLiteral("Author"), [this]() { m_state.recentInfo.author = !m_state.recentInfo.author; refresh(); });
-        m_infoProgress = new NtControl(this, NtControl::Check, QStringLiteral("Progress"), [this]() { m_state.recentInfo.progress = !m_state.recentInfo.progress; refresh(); });
-        m_infoCover->setFixedWidth(150);
-        m_infoTitle->setFixedWidth(140);
-        m_infoAuthor->setFixedWidth(165);
-        m_infoProgress->setFixedWidth(185);
-        h->addWidget(m_infoCover);
-        h->addWidget(m_infoTitle);
-        h->addWidget(m_infoAuthor);
-        h->addWidget(m_infoProgress);
+        m_infoCover = flagCheck(h, QStringLiteral("Cover"), 150, &m_state.recentCover);
+        m_infoTitle = flagCheck(h, QStringLiteral("Title"), 140, &m_state.recentInfo.title);
+        m_infoAuthor = flagCheck(h, QStringLiteral("Author"), 165, &m_state.recentInfo.author);
+        m_infoProgress = flagCheck(h, QStringLiteral("Progress"), 185, &m_state.recentInfo.progress);
 
         h = row(v, QStringLiteral("Sleep screen shows that book"),
                 QStringLiteral("Also turn on Kobo's “Show book covers full screen”"));
@@ -315,17 +412,9 @@ private:
 
     // Add-ons left switched off by a crash, with a button to turn them back on.
     void buildRepairRow(QVBoxLayout *v) {
-        QHBoxLayout *h = new QHBoxLayout();
-        h->setSpacing(14);
-        QVBoxLayout *text = new QVBoxLayout();
-        text->setSpacing(2);
-        text->addWidget(label(QStringLiteral("Switched-off add-ons"), 32));
-        m_repairNote = label(QString(), 22);
-        text->addWidget(m_repairNote);
-        h->addLayout(text, 1);
-        m_repair = button(QStringLiteral("Repair"), 200, [this]() { repairAddons(); });
+        QHBoxLayout *h = row(v, QStringLiteral("Switched-off add-ons"), QString(), &m_repairNote);
+        m_repair = ntButton(this, QStringLiteral("Repair"), 200, [this]() { repairAddons(); });
         h->addWidget(m_repair);
-        v->addLayout(h);
     }
 
     void repairAddons() {
@@ -353,38 +442,8 @@ private:
 
     void buildTileList(QVBoxLayout *v) {
         v->addSpacing(10);
-        QHBoxLayout *listHead = new QHBoxLayout();
-        listHead->addWidget(label(QStringLiteral("Tiles to show"), 32, true), 1);
-        m_prev = button(QStringLiteral("‹"), 90, [this]() { m_page--; refresh(); });
-        m_pageLabel = label(QString(), 26);
-        m_pageLabel->setAlignment(Qt::AlignCenter);
-        m_pageLabel->setFixedWidth(120);
-        m_next = button(QStringLiteral("›"), 90, [this]() { m_page++; refresh(); });
-        listHead->addWidget(m_prev);
-        listHead->addWidget(m_pageLabel);
-        listHead->addWidget(m_next);
-        v->addLayout(listHead);
-
-        QGridLayout *grid = new QGridLayout();
-        grid->setHorizontalSpacing(24);
-        grid->setVerticalSpacing(4);
-        for (int i = 0; i < kTilesPerPage; i++) {
-            NtControl *c = new NtControl(this, NtControl::Check, QString(), [this, i]() { toggleTile(i); });
-            grid->addWidget(c, i % (kTilesPerPage / 2), i / (kTilesPerPage / 2));
-            m_checks << c;
-        }
-        v->addLayout(grid);
-        v->addStretch(1);
-    }
-
-    // Flips the tile in slot `slot` of the current page.
-    void toggleTile(int slot) {
-        const int index = m_page * kTilesPerPage + slot;
-        if (index >= m_labels.size()) return;
-        const QString &l = m_labels.at(index);
-        if (m_hidden.contains(l)) m_hidden.remove(l);
-        else m_hidden.insert(l);
-        refresh();
+        m_tiles = new NtTileList(this, m_labels, m_initial.hidden);
+        m_tiles->addTo(v);
     }
 
     void refresh() {
@@ -407,48 +466,12 @@ private:
         m_sleep->setChecked(m_state.sleepCover);
         m_hideRows->setChecked(m_state.hideRows);
         refreshRepairRow();
-        refreshTileList();
-    }
-
-    void refreshTileList() {
-        const int pages = m_labels.isEmpty() ? 1 : (m_labels.size() + kTilesPerPage - 1) / kTilesPerPage;
-        if (m_page >= pages) m_page = pages - 1;
-        if (m_page < 0) m_page = 0;
-        m_prev->setVisible(pages > 1);
-        m_next->setVisible(pages > 1);
-        m_pageLabel->setVisible(pages > 1);
-        m_prev->setPressEnabled(m_page > 0);
-        m_next->setPressEnabled(m_page + 1 < pages);
-        m_pageLabel->setText(QString::number(m_page + 1) + QStringLiteral(" / ") + QString::number(pages));
-        for (int i = 0; i < m_checks.size(); i++) {
-            const int index = m_page * kTilesPerPage + i;
-            NtControl *c = m_checks.at(i);
-            if (index < m_labels.size()) {
-                c->setText(m_labels.at(index));
-                c->setChecked(!m_hidden.contains(m_labels.at(index)));
-                c->setVisible(true);
-            } else {
-                c->setVisible(false);
-            }
-        }
-    }
-
-    // The hidden list in the order it is written. Hide: lines for tiles that
-    // are not listed now are kept (an entry that was removed may come back),
-    // in the order they had; then the listed tiles in list order.
-    QStringList hiddenAfter() const {
-        if (m_hidden == QSet<QString>::fromList(m_initial.hidden)) return m_initial.hidden;
-        QStringList out;
-        for (const QString &l : m_initial.hidden)
-            if (!m_labels.contains(l)) out << l;
-        for (const QString &l : m_labels)
-            if (m_hidden.contains(l)) out << l;
-        return out;
+        m_tiles->refresh();
     }
 
     bool save() {
         NtSettings after = m_state;
-        after.hidden = hiddenAfter();
+        after.hidden = m_tiles->hiddenAfter(m_initial.hidden);
         return nt_settings_save(m_initial, after);
     }
 
@@ -467,14 +490,12 @@ private:
     QStringList m_labels;
     std::function<void()> m_onSaved;
     NtSettings m_initial;
-    NtSettings m_state;        // edited copy; `hidden` is edited as m_hidden
-    QSet<QString> m_hidden;
-    int m_page;
-    NtControl *m_colsDown, *m_colsUp, *m_pxAuto, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
+    NtSettings m_state;        // edited copy; `hidden` is taken from m_tiles on save
+    NtTileList *m_tiles;
+    NtControl *m_colsDown, *m_colsUp, *m_pxAuto, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows;
     NtControl *m_infoCover, *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
     QLabel *m_repairNote;
-    QLabel *m_colsValue, *m_pxValue, *m_pageLabel;
-    QList<NtControl*> m_checks;
+    QLabel *m_colsValue, *m_pxValue;
 };
 
 } // namespace

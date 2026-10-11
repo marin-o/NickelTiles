@@ -196,21 +196,21 @@ void NtSettingsTile::activate() {
 
 const char *const NtRecentTile::kLabel = "Continue reading";
 
-NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, NtRecentSource source, NtRecentInfo info,
-                           bool showCover)
-    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_source(source), m_info(info), m_showCover(showCover) {
+NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings)
+    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_recentSource(settings.recentSource),
+      m_recentInfo(settings.recentInfo), m_recentCover(settings.recentCover) {
     setIcon(nt_icon_for(label(), QString()));
 }
 
 void NtRecentTile::refresh() {
-    m_book = nt_recent_book(m_source);
+    m_book = nt_recent_book(m_recentSource);
     if (!m_book.valid) {
         setVisible(false);
         NT_DBG("recent: no book");
         return;
     }
     QPixmap cover;
-    if (m_showCover && nt_is_epub(m_book.path))
+    if (m_recentCover && nt_is_epub(m_book.path))
         cover = nt_epub_cover(m_book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
     setIcon(cover.isNull() ? nt_icon_for(label(), QString()) : cover);
     setVisible(true);
@@ -224,11 +224,11 @@ void NtRecentTile::refresh() {
 QStringList NtRecentTile::caption(const QFontMetrics &fm, int textWidth) const {
     QStringList lines;
     QStringList tail;
-    if (m_info.author && !m_book.author.isEmpty())
+    if (m_recentInfo.author && !m_book.author.isEmpty())
         tail << fm.elidedText(m_book.author, Qt::ElideRight, textWidth);
-    if (m_info.progress && m_book.percent >= 0)
+    if (m_recentInfo.progress && m_book.percent >= 0)
         tail << QString::number(m_book.percent) + QStringLiteral("%");
-    if (m_info.title)
+    if (m_recentInfo.title)
         lines << nt_wrap(m_book.title, fm, textWidth, kCaptionLines - tail.size());
     lines << tail;
     return lines;
