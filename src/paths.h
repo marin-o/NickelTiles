@@ -13,6 +13,7 @@
 #define NT_PLATO_STATES         NT_ONBOARD "/.reading-states"
 #define NT_KOBO_DB              NT_ONBOARD "/.kobo/KoboReader.sqlite"
 #define NT_SCREENSAVER_DIR      NT_ONBOARD "/.kobo/screensaver"
+#define NT_PLUGIN_DIR           "/usr/local/Kobo/imageformats"
 #define NT_NICKEL_HW_STATUS     "/tmp/nickel-hardware-status"
 
 #define NT_ICON_DIR             NT_CONFIG_DIR "/icons"

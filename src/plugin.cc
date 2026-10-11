@@ -1,5 +1,6 @@
 #include <QWidget>
 
+#include "addons.h"
 #include "config.h"
 #include "grid.h"
 #include "nickel.h"
@@ -14,6 +15,7 @@ static void (*Ui_HomePageView_setupUi)(Ui_HomePageView *_this, HomePageView *vie
 static void (*PowerViewController_updateCover)(PowerViewController *_this);
 
 static int nt_init() {
+    nt_addons_mark_start();
     nt_config_get("");   // parse the config now, so a problem shows in the startup log
     NT_LOG("startup: NickelTiles " NH_VERSION);
     nt_log_firmware();

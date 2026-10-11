@@ -23,6 +23,9 @@ NickelHome.
 - **Settings on the reader.** The *Tiles settings* tile opens a page for
   tiles per row, tile size, which tiles are shown, and the options above.
   Changes apply at once.
+- **Repair switched-off add-ons.** The settings page lists NickelHook add-ons
+  (NickelMenu, KPM, NickelHome, ...) that a crash left switched off, and turns
+  them back on with one tap.
 - **Arrange.** Long-press a tile, then tap another one to swap them.
 - **E-ink friendly.** Black on white; a tile darkens while pressed.
 
@@ -75,6 +78,19 @@ privacy > Show book covers full screen** is on. NickelTiles keeps the image as
 `.kobo/screensaver/nt-recent.<ext>` and refreshes it as the reader goes to
 sleep. Turn it off on the settings page (or `nt_sleep_cover:0`); images you put
 in that folder yourself are left alone.
+
+### Switched-off add-ons
+
+If Kobo crashes within a few seconds of starting (it can happen when an app
+hands control back to Kobo), NickelHook add-ons switch themselves off to avoid
+a crash loop, and stay off: NickelMenu disappears, KPM's window no longer
+opens, and so on. *Tiles settings > Switched-off add-ons* lists them; Repair
+turns them back on, then restart the reader. The button waits until Kobo has
+been running for 30 seconds, because every add-on is briefly in that state
+while it starts.
+
+NickelTiles cannot repair itself: if the tiles are gone, install the package
+again (KPM or `KoboRoot.tgz`).
 
 ## Uninstall
 

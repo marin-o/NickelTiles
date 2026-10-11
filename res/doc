@@ -27,6 +27,8 @@
 #     tile size, the Continue reading tile and where it takes the book from,
 #     the sleep screen cover, Kobo's home rows, and which tiles are shown.
 #     Save applies at once; Cancel leaves everything as it was.
+#     Switched-off add-ons: NickelHook add-ons a crash left off (NickelMenu,
+#     KPM, NickelHome, ...); Repair turns them back on, then restart.
 #   - Tap a tile: it darkens while pressed and runs when released.
 #   - Long-press a tile (about 0.7 s): it gets a thick frame (arrange mode).
 #     Tap another tile to swap the two; tap the same tile to cancel. The new

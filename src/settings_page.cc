@@ -16,6 +16,7 @@
 #include <QSet>
 #include <QStringList>
 
+#include "addons.h"
 #include "nickel.h"
 #include "pressable.h"
 #include "settings_model.h"
@@ -24,7 +25,7 @@
 
 namespace {
 
-const int kTilesPerPage = 8;    // two columns of four
+const int kTilesPerPage = 6;    // two columns of three
 
 // A tappable control. Kind Button: rounded box with centred text. Kind Check:
 // a check box followed by the text, left aligned (a row in the tile list).
@@ -240,6 +241,7 @@ private:
         v->addWidget(label(QStringLiteral("Tiles settings"), 40, true));
         buildSizeRows(v);
         buildRecentRows(v);
+        buildRepairRow(v);
         buildTileList(v);
 
         QHBoxLayout *bottom = new QHBoxLayout();
@@ -299,6 +301,44 @@ private:
         h->addWidget(m_hideRows);
     }
 
+    // Add-ons left switched off by a crash, with a button to turn them back on.
+    void buildRepairRow(QVBoxLayout *v) {
+        QHBoxLayout *h = new QHBoxLayout();
+        h->setSpacing(14);
+        QVBoxLayout *text = new QVBoxLayout();
+        text->setSpacing(2);
+        text->addWidget(label(QStringLiteral("Switched-off add-ons"), 32));
+        m_repairNote = label(QString(), 22);
+        text->addWidget(m_repairNote);
+        h->addLayout(text, 1);
+        m_repair = button(QStringLiteral("Repair"), 200, [this]() { repairAddons(); });
+        h->addWidget(m_repair);
+        v->addLayout(h);
+    }
+
+    void repairAddons() {
+        const QStringList restored = nt_restore_addons();
+        QStringList names;
+        for (const QString &library : restored) names << nt_addon_name(library);
+        nt_toast(restored.isEmpty() ? QStringLiteral("Nothing to repair")
+                                    : names.join(QStringLiteral(", ")) + QStringLiteral(" turned back on. Restart the reader to load them."), 4000);
+        refreshRepairRow();
+    }
+
+    void refreshRepairRow() {
+        const QStringList off = nt_switched_off_addons();
+        QStringList names;
+        for (const QString &library : off) names << nt_addon_name(library);
+        if (off.isEmpty())
+            m_repairNote->setText(QStringLiteral("None. A crash right after Kobo starts can switch add-ons off."));
+        else if (!nt_addons_settled())
+            m_repairNote->setText(names.join(QStringLiteral(", ")) + QStringLiteral(" (still starting; check again in half a minute)"));
+        else
+            m_repairNote->setText(names.join(QStringLiteral(", ")));
+        // Before every failsafe window has passed, a renamed library may just be starting up.
+        m_repair->setPressEnabled(!off.isEmpty() && nt_addons_settled());
+    }
+
     void buildTileList(QVBoxLayout *v) {
         v->addSpacing(10);
         QHBoxLayout *listHead = new QHBoxLayout();
@@ -353,6 +393,7 @@ private:
         m_infoProgress->setChecked(m_state.recentInfo.progress);
         m_sleep->setChecked(m_state.sleepCover);
         m_hideRows->setChecked(m_state.hideRows);
+        refreshRepairRow();
         refreshTileList();
     }
 
@@ -417,7 +458,8 @@ private:
     QSet<QString> m_hidden;
     int m_page;
     NtControl *m_colsDown, *m_colsUp, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
-    NtControl *m_infoTitle, *m_infoAuthor, *m_infoProgress;
+    NtControl *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
+    QLabel *m_repairNote;
     QLabel *m_colsValue, *m_pxValue, *m_pageLabel;
     QList<NtControl*> m_checks;
 };

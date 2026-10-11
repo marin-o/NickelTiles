@@ -26,6 +26,7 @@ Each `.h` in `src/` documents its module; this is the map.
 | `recent` | The most recently read book across KOReader, Plato and Nickel, and opening it in the right app |
 | `zip`, `epub` | Reading EPUB covers with the zlib Nickel already loaded |
 | `sleepcover` | Keeps the Continue reading cover in `.kobo/screensaver` |
+| `addons` | Finds and restores NickelHook add-ons a crash left switched off |
 | `pressable` | Touch handling shared by every tappable widget (Nickel sends only `QTouchEvent`s) |
 | `ui` | Fonts, word wrap, debug screenshots |
 | `tiles` | The tile widgets |
