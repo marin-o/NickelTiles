@@ -274,3 +274,20 @@ const nt_tile_t *nt_config_tiles(void) {
     if (!parsed) parse();
     return tiles;
 }
+
+void nt_config_reload(void) {
+    while (entries) {
+        nt_entry_t *e = entries;
+        entries = e->next;
+        free(e->key); free(e->val); free(e);
+    }
+    while (tiles) {
+        nt_tile_t *t = tiles;
+        tiles = t->next;
+        free(t->label); free(t->icon); free(t->command); free(t);
+    }
+    entries_tail = NULL;
+    tiles_tail = NULL;
+    parsed = false;
+    problem = false;
+}
