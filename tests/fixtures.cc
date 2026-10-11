@@ -10,7 +10,8 @@
 
 namespace {
 
-const char kRoot[] = "/tmp/nt-tests";
+// QStringLiteral needs a literal, so the root is a macro rather than a constant.
+#define NT_TEST_ROOT "/tmp/nt-tests"
 
 // Zips a folder tree with deflate, as real EPUBs are, so the reader's inflate
 // path runs. Member names use '/' on every platform.
@@ -26,7 +27,7 @@ const char kZipScript[] =
 }  // namespace
 
 void removeFixtures() {
-    QDir(QStringLiteral(kRoot)).removeRecursively();
+    QDir(QStringLiteral(NT_TEST_ROOT)).removeRecursively();
 }
 
 bool writeFile(const QString &path, const QByteArray &data) {
@@ -49,7 +50,7 @@ QByteArray jpegBytes(int width, int height) {
 
 bool writeEpub(const QString &epubPath, const QMap<QString, QByteArray> &files) {
     // Stage the members in a folder named after the book, so two books never share one.
-    const QString stage = QStringLiteral(kRoot) + QStringLiteral("/stage/") + QFileInfo(epubPath).fileName();
+    const QString stage = QStringLiteral(NT_TEST_ROOT) + QStringLiteral("/stage/") + QFileInfo(epubPath).fileName();
     QDir(stage).removeRecursively();
     for (auto it = files.constBegin(); it != files.constEnd(); ++it)
         if (!writeFile(stage + QLatin1Char('/') + it.key(), it.value())) return false;
