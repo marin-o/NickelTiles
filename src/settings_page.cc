@@ -290,12 +290,15 @@ private:
         h->addWidget(m_source);
 
         h = row(v, QStringLiteral("Tile shows"));
+        m_infoCover = new NtControl(this, NtControl::Check, QStringLiteral("Cover"), [this]() { m_state.recentCover = !m_state.recentCover; refresh(); });
         m_infoTitle = new NtControl(this, NtControl::Check, QStringLiteral("Title"), [this]() { m_state.recentInfo.title = !m_state.recentInfo.title; refresh(); });
         m_infoAuthor = new NtControl(this, NtControl::Check, QStringLiteral("Author"), [this]() { m_state.recentInfo.author = !m_state.recentInfo.author; refresh(); });
         m_infoProgress = new NtControl(this, NtControl::Check, QStringLiteral("Progress"), [this]() { m_state.recentInfo.progress = !m_state.recentInfo.progress; refresh(); });
-        m_infoTitle->setFixedWidth(150);
-        m_infoAuthor->setFixedWidth(170);
-        m_infoProgress->setFixedWidth(190);
+        m_infoCover->setFixedWidth(150);
+        m_infoTitle->setFixedWidth(140);
+        m_infoAuthor->setFixedWidth(165);
+        m_infoProgress->setFixedWidth(185);
+        h->addWidget(m_infoCover);
         h->addWidget(m_infoTitle);
         h->addWidget(m_infoAuthor);
         h->addWidget(m_infoProgress);
@@ -397,6 +400,7 @@ private:
         m_recent->setChecked(m_state.recent);
         m_source->setText(QString::fromUtf8(kSources[sourceIndex(m_state.recentSource)].name));
         m_source->setPressEnabled(m_state.recent);
+        m_infoCover->setChecked(m_state.recentCover);
         m_infoTitle->setChecked(m_state.recentInfo.title);
         m_infoAuthor->setChecked(m_state.recentInfo.author);
         m_infoProgress->setChecked(m_state.recentInfo.progress);
@@ -467,7 +471,7 @@ private:
     QSet<QString> m_hidden;
     int m_page;
     NtControl *m_colsDown, *m_colsUp, *m_pxAuto, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows, *m_prev, *m_next;
-    NtControl *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
+    NtControl *m_infoCover, *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
     QLabel *m_repairNote;
     QLabel *m_colsValue, *m_pxValue, *m_pageLabel;
     QList<NtControl*> m_checks;

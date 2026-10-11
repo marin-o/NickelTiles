@@ -21,7 +21,7 @@ bool nt_log_verbose = false;
 static const char *const known_keys[] = {
     "nt_draw",
     "nt_enabled", "nt_log", "nt_actions", "nt_hide_rows", "nt_recent",
-    "nt_columns", "nt_tile_px", "nt_recent_source", "nt_recent_info", "nt_sleep_cover", "hide", "icon", "order", "tile", NULL,
+    "nt_columns", "nt_tile_px", "nt_recent_source", "nt_recent_info", "nt_recent_cover", "nt_sleep_cover", "hide", "icon", "order", "tile", NULL,
 };
 
 bool nt_config_problem_seen(void) {

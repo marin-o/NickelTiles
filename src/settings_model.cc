@@ -17,6 +17,7 @@ const char kKeyHideRows[] = "nt_hide_rows";
 const char kKeyRecent[] = "nt_recent";
 const char kKeyRecentSource[] = "nt_recent_source";
 const char kKeyRecentInfo[] = "nt_recent_info";
+const char kKeyRecentCover[] = "nt_recent_cover";
 const char kKeySleepCover[] = "nt_sleep_cover";
 const char kKeyColumns[] = "nt_columns";
 const char kKeyTilePx[] = "nt_tile_px";
@@ -119,6 +120,7 @@ NtSettings nt_settings() {
     s.recent = nt_config_bool(kKeyRecent, defaults.recent);
     s.recentSource = parseSource(nt_config_get(kKeyRecentSource));
     s.recentInfo = parseInfo(nt_config_get(kKeyRecentInfo));
+    s.recentCover = nt_config_bool(kKeyRecentCover, defaults.recentCover);
     s.sleepCover = nt_config_bool(kKeySleepCover, defaults.sleepCover);
     s.columns = nt_config_int(kKeyColumns, defaults.columns);
     if (s.columns < 1) s.columns = 1;
@@ -137,6 +139,7 @@ bool nt_settings_save(const NtSettings &before, const NtSettings &after) {
     if (before.recentSource != after.recentSource)
         ok &= setValue(kKeyRecentSource, QString::fromLatin1(sourceName(after.recentSource)));
     if (before.recentInfo != after.recentInfo) ok &= setValue(kKeyRecentInfo, infoText(after.recentInfo));
+    if (before.recentCover != after.recentCover) ok &= setValue(kKeyRecentCover, flag(after.recentCover));
     if (before.sleepCover != after.sleepCover) ok &= setValue(kKeySleepCover, flag(after.sleepCover));
     if (before.columns != after.columns) ok &= setValue(kKeyColumns, QString::number(after.columns));
     if (before.tilePx != after.tilePx)

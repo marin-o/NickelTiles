@@ -169,7 +169,8 @@ void NtGrid::build() {
     QStringList seen;
 
     if (m_settings.recent) {
-        m_recent = new NtRecentTile(this, this, px, m_settings.recentSource, m_settings.recentInfo);
+        m_recent = new NtRecentTile(this, this, px, m_settings.recentSource, m_settings.recentInfo,
+                                    m_settings.recentCover);
         m_tiles << m_recent;
     }
     for (const NtEntry &e : nt_nickelmenu_entries())

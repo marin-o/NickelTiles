@@ -36,16 +36,33 @@ ICONS = {
     "kpm - Update all": ("\u2b06", True),
     "kpm - Status": ("i", False),
     "kpm - Package manager": ("kpm", False),
-    "Continue reading": ("\u25b6", True),
+    "Continue reading": (None, False),   # drawn: an open book
     "Rescan books": ("\u2b6e", True),
     "Tiles settings": ("\u2699", True),
 }
+
+def draw_open_book(d):
+    """Two pages meeting at a spine, with a few lines of text on each."""
+    spine_top, spine_bottom = 66, 148
+    for side in (-1, 1):
+        x = lambda dx: 100 + side * dx
+        page = [(x(0), spine_top), (x(22), 56), (x(62), 58), (x(62), 140), (x(22), 138), (x(0), spine_bottom)]
+        d.line(page + [page[0]], fill=0, width=7, joint="curve")
+        for y in (82, 98, 114):
+            d.line([(x(14), y + 2), (x(48), y - 2)], fill=0, width=5)
+
 
 os.makedirs(OUT, exist_ok=True)
 for label, (glyph, symbol) in ICONS.items():
     img = Image.new("L", (SIZE, SIZE), 255)
     d = ImageDraw.Draw(img)
     d.rounded_rectangle([6, 6, SIZE - 7, SIZE - 7], radius=28, outline=0, width=7)
+    if glyph is None:
+        draw_open_book(d)
+        path = os.path.join(OUT, slug(label) + ".png")
+        img.save(path, optimize=True)
+        print(path, os.path.getsize(path))
+        continue
     fsize = 88 if len(glyph) <= 2 else 64
     f = font(SYMBOL_FONTS if symbol else FONTS, fsize)
     # Fallback for symbol glyphs the font cannot draw
