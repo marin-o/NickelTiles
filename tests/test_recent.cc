@@ -50,6 +50,7 @@ private slots:
     void cleanup() { removeFixtures(); }
 
     void koreaderBookWithSidecar();
+    void koreaderSkipsDeletedBook();
     void platoBook();
     void anyPicksNewestApp();
 };
@@ -70,6 +71,23 @@ void TestRecent::koreaderBookWithSidecar() {
     QCOMPARE(book.author, QStringLiteral("Jane Doe"));
     QCOMPARE(book.percent, 42);
     QCOMPARE(book.lastRead, kKoreaderTime);
+}
+
+// Regression: deleting the newest book made KOReader report no book at all,
+// so the tile fell back to another app instead of the next KOReader book.
+void TestRecent::koreaderSkipsDeletedBook() {
+    const QString kept = bookPath(QStringLiteral("kept.fb2"));
+    QVERIFY(writeFile(kept, QByteArray("book")));
+    const QByteArray text = "return {\n [1] = {\n  [\"time\"] = 1700000200,\n  [\"file\"] = \"" +
+                            bookPath(QStringLiteral("deleted.epub")).toUtf8() +
+                            "\",\n },\n [2] = {\n  [\"time\"] = 1700000100,\n  [\"file\"] = \"" + kept.toUtf8() +
+                            "\",\n },\n}\n";
+    QVERIFY(writeFile(QStringLiteral(NT_KOREADER_HISTORY), text));
+
+    const NtRecentBook book = nt_recent_book(NtRecentSource::Koreader);
+    QVERIFY(book.valid);
+    QCOMPARE(book.path, kept);
+    QCOMPARE(book.lastRead, qint64(1700000100));
 }
 
 void TestRecent::platoBook() {
