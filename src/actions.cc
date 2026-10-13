@@ -4,7 +4,7 @@
 #include <QString>
 #include <QStringList>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "nickel.h"
 #include "paths.h"
@@ -33,9 +33,9 @@ static QString nt_strip_quiet(const QString &arg, bool *quiet) {
 
 // Starts `command` detached in /. The outcome is logged under `label`.
 static bool nt_spawn(const QString &label, const QString &command, qint64 *pid) {
-    const bool ok = QProcess::startDetached(QStringLiteral("/bin/sh"),
-        QStringList() << QStringLiteral("-c") << command, QStringLiteral("/"), pid);
-    NT_LOG("%s %s pid=%lld: %s", qPrintable(label), ok ? "ok" : "FAILED", (long long)*pid, qPrintable(command));
+    const bool ok = QProcess::startDetached(QStringLiteral("/bin/sh"), QStringList() << QStringLiteral("-c") << command,
+                                            QStringLiteral("/"), pid);
+    NT_LOG("%s %s pid=%lld: %s", qPrintable(label), ok ? "ok" : "FAILED", *pid, qPrintable(command));
     return ok;
 }
 
@@ -146,10 +146,14 @@ static bool run_nickel_misc(const NtAction &a, QString *err) {
 }
 
 static bool wifiChangeFor(const QString &arg, NtWifiChange *change) {
-    if (arg == QLatin1String("enable")) *change = NtWifiChange::Enable;
-    else if (arg == QLatin1String("disable")) *change = NtWifiChange::Disable;
-    else if (arg == QLatin1String("toggle")) *change = NtWifiChange::Toggle;
-    else return false;
+    if (arg == QLatin1String("enable"))
+        *change = NtWifiChange::Enable;
+    else if (arg == QLatin1String("disable"))
+        *change = NtWifiChange::Disable;
+    else if (arg == QLatin1String("toggle"))
+        *change = NtWifiChange::Toggle;
+    else
+        return false;
     return true;
 }
 
@@ -190,8 +194,8 @@ bool nt_run_entry(const NtEntry &entry) {
         if (a.chain == NtAction::OnFailure && (!ran || ok)) continue;
         QString err;
         const bool r = nt_run_action(a, &err);
-        NT_LOG("entry '%s': %s %s -> %s%s%s", qPrintable(entry.label), qPrintable(a.kind),
-            qPrintable(a.arg.left(80)), r ? "ok" : "failed", r ? "" : ": ", r ? "" : qPrintable(err));
+        NT_LOG("entry '%s': %s %s -> %s%s%s", qPrintable(entry.label), qPrintable(a.kind), qPrintable(a.arg.left(80)),
+               r ? "ok" : "failed", r ? "" : ": ", r ? "" : qPrintable(err));
         if (!r) nt_toast(entry.label + QStringLiteral(": ") + err, 3000);
         ok = r;
         ran = true;

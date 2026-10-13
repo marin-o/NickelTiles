@@ -10,6 +10,8 @@
 #include <QRect>
 #include <QStringList>
 
+#include <utility>
+
 #include "config.h"
 #include "epub.h"
 #include "paths.h"
@@ -49,8 +51,7 @@ QHash<QString, QPixmap> &nt_icon_cache() {
 // Icon for a label: config override, icons/<slug>.png, else null (letter tile).
 QPixmap nt_icon_for(const QString &label, const QString &explicitPath) {
     const QString cacheKey = label + QLatin1Char('\n') + explicitPath;
-    if (nt_icon_cache().contains(cacheKey))
-        return nt_icon_cache().value(cacheKey);
+    if (nt_icon_cache().contains(cacheKey)) return nt_icon_cache().value(cacheKey);
     QString path = explicitPath;
     if (path.isEmpty()) {
         const QString prefix = QStringLiteral("icon");
@@ -58,11 +59,13 @@ QPixmap nt_icon_for(const QString &label, const QString &explicitPath) {
             if (QString::fromUtf8(e->key) != prefix) continue;
             QString v = QString::fromUtf8(e->val);
             int i = v.indexOf(QLatin1Char(':'));
-            if (i > 0 && v.left(i).trimmed() == label) { path = v.mid(i + 1).trimmed(); break; }
+            if (i > 0 && v.left(i).trimmed() == label) {
+                path = v.mid(i + 1).trimmed();
+                break;
+            }
         }
     }
-    if (path.isEmpty())
-        path = QStringLiteral(NT_ICON_DIR "/") + nt_slug(label) + QStringLiteral(".png");
+    if (path.isEmpty()) path = QStringLiteral(NT_ICON_DIR "/") + nt_slug(label) + QStringLiteral(".png");
     QPixmap pix(path);
     if (pix.isNull())
         NT_DBG("no icon for '%s' at %s", qPrintable(label), qPrintable(path));
@@ -96,7 +99,7 @@ void nt_draw_initials(QPainter &p, const QWidget *w, const QString &label, const
     p.drawText(box, Qt::AlignCenter, nt_initials(label));
 }
 
-}  // namespace
+}   // namespace
 
 // --- NtTile
 
@@ -184,7 +187,7 @@ void NtCommandTile::activate() {
 const char *const NtSettingsTile::kLabel = "Tiles settings";
 
 NtSettingsTile::NtSettingsTile(QWidget *parent, NtTileHost *host, int px, std::function<void()> open)
-    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_open(open) {
+    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_open(std::move(open)) {
     setIcon(nt_icon_for(label(), QString()));
 }
 
@@ -216,7 +219,7 @@ void NtRecentTile::refresh() {
     setVisible(true);
     update();
     NT_LOG("recent: %s '%s' by '%s' %d%% -> %s", nt_reader_app_name(m_book.app), qPrintable(m_book.title),
-        qPrintable(m_book.author), m_book.percent, qPrintable(m_book.path));
+           qPrintable(m_book.author), m_book.percent, qPrintable(m_book.path));
 }
 
 // Title, author and progress on their own lines, as chosen by nt_recent_info.
@@ -226,10 +229,8 @@ QStringList NtRecentTile::caption(const QFontMetrics &fm, int textWidth) const {
     QStringList tail;
     if (m_recentInfo.author && !m_book.author.isEmpty())
         tail << fm.elidedText(m_book.author, Qt::ElideRight, textWidth);
-    if (m_recentInfo.progress && m_book.percent >= 0)
-        tail << QString::number(m_book.percent) + QStringLiteral("%");
-    if (m_recentInfo.title)
-        lines << nt_wrap(m_book.title, fm, textWidth, kCaptionLines - tail.size());
+    if (m_recentInfo.progress && m_book.percent >= 0) tail << QString::number(m_book.percent) + QStringLiteral("%");
+    if (m_recentInfo.title) lines << nt_wrap(m_book.title, fm, textWidth, kCaptionLines - tail.size());
     lines << tail;
     return lines;
 }

@@ -41,7 +41,7 @@ void compareSettings(const NtSettings &got, const NtSettings &want) {
     QCOMPARE(got.order, want.order);
 }
 
-}  // namespace
+}   // namespace
 
 class TestConfig : public QObject {
     Q_OBJECT

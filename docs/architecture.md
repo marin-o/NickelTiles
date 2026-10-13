@@ -19,6 +19,7 @@ Each `.h` in `src/` documents its module; this is the map.
 | --- | --- |
 | `plugin` | NickelHook registration, startup log, the two hook entry points |
 | `nickel` | Typed wrappers over the optional libnickel functions (toast, power, Wi-Fi, home, open a book in Nickel's reader) |
+| `util` | Logging (`NT_LOG`, `NT_DBG`) and small string helpers, shared by C and C++ (C) |
 | `config` | The raw `key:value` config file: parse, cache, atomic in-place writes (C) |
 | `settings_model` | All settings as one `NtSettings` value with names and defaults in one place; load and save |
 | `nm_parse` | Reads NickelMenu's config files into entries |

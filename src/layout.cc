@@ -9,7 +9,7 @@ int gridWidthFor(int columns, int px) {
     return columns * px + (columns - 1) * kNtGridSpacing + 2 * kNtGridMargin;
 }
 
-}  // namespace
+}   // namespace
 
 int nt_tile_size(int columns, int tilePx, int width) {
     if (tilePx > 0) return tilePx;

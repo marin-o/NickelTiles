@@ -28,11 +28,11 @@ LDLIBS := $(QT_LIBS) -ldl
 # The module objects each test links: only what it needs. recent.cc calls into
 # Nickel, so its test links stubs/ instead of nickel.cc and actions.cc.
 test_layout_OBJS := layout.o
-test_config_OBJS := config.o settings_model.o fixtures.o
-test_nm_parse_OBJS := nm_parse.o fixtures.o
-test_epub_OBJS := epub.o zip.o config.o fixtures.o
-test_ui_OBJS := ui.o config.o
-test_recent_OBJS := recent.o config.o stubs.o fixtures.o
+test_config_OBJS := util.o config.o settings_model.o fixtures.o
+test_nm_parse_OBJS := util.o nm_parse.o fixtures.o
+test_epub_OBJS := util.o epub.o zip.o config.o fixtures.o
+test_ui_OBJS := util.o ui.o config.o
+test_recent_OBJS := util.o recent.o config.o stubs.o fixtures.o
 
 .SECONDEXPANSION:
 .PHONY: check clean

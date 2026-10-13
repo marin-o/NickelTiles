@@ -46,7 +46,7 @@ static void nt_parse_line(QString line, QList<NtEntry> *entries, NtEntry **curre
     const QStringList f5 = nt_split_fields(line, 5);
     const QString kind = f5.value(0);
     if (kind == QLatin1String("menu_item")) {
-        *current = NULL;
+        *current = nullptr;
         if (f5.size() < 5 || f5.at(1) != QLatin1String("main")) return;
         NtEntry e;
         e.label = f5.at(2);
@@ -66,7 +66,7 @@ static void nt_parse_line(QString line, QList<NtEntry> *entries, NtEntry **curre
         a.chain = nt_chain_for(kind);
         (*current)->actions << a;
     } else {
-        *current = NULL;
+        *current = nullptr;
     }
 }
 
@@ -75,7 +75,7 @@ static void nt_read_file(const QString &path, QList<NtEntry> *entries) {
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
     QTextStream in(&f);
     in.setCodec("UTF-8");
-    NtEntry *current = NULL;
+    NtEntry *current = nullptr;
     while (!in.atEnd()) nt_parse_line(in.readLine(), entries, &current);
 }
 

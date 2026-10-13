@@ -11,9 +11,9 @@ are as valuable as code: so far NickelTiles has run on one reader.
 | `main` | Released code; every release is a `vX.Y.Z` tag here | Maintainers only, by fast-forwarding to a tested `dev` |
 
 Open pull requests against **`dev`**: it accepts changes only through pull
-requests whose build and tests pass, and they are squash-merged, so one pull
+requests whose build, tests and lint pass, and they are squash-merged, so one pull
 request becomes one commit. `main` can only be updated by maintainers, only to
-commits whose build and tests passed, and its history is never rewritten.
+commits whose build, tests and lint passed, and its history is never rewritten.
 
 Releases: a maintainer fast-forwards `main` to `dev` once it has been tested on
 a reader, and tags it (`vX.Y.Z`); GitHub Actions then builds `KoboRoot.tgz`
@@ -33,7 +33,32 @@ docker run --rm -v "$PWD:/src" -w /src ghcr.io/pgaskin/nickeltc:1.0 \
 Or with [NickelTC](https://github.com/pgaskin/NickelTC) unpacked locally:
 `NICKELTC_BASE=/path/to/nickeltc tools/build.sh`.
 
-The build uses `-Werror`; a pull request must build without warnings.
+The build uses `-Werror` with a strict warning set for `src/` (old-style
+casts, missing declarations, format strings, and more; see the `Makefile`); a
+pull request must build without warnings.
+
+## Lint
+
+Every push and pull request also runs the Lint workflow (`tools/lint.sh`):
+
+- **clang-format** checks the layout against `.clang-format`. Run
+  `clang-format -i` on the files you changed instead of formatting by hand.
+- **clang-tidy** checks the code against `.clang-tidy`: likely bugs, needless
+  copies, outdated or unclear C++, and functions that grew too complex
+  (cognitive complexity above 20 means the function should be split).
+
+On Debian or Ubuntu, with the same tool versions as the workflow:
+
+```sh
+sudo apt install qtbase5-dev
+pip install clang-tidy==22.1.8 clang-format==23.1.3
+QT_INCLUDE=/usr/include/x86_64-linux-gnu/qt5 sh tools/lint.sh
+```
+
+Fix the finding rather than silencing it. A `NOLINT` needs a reason in the
+same comment and is accepted only where the check is wrong for this code (for
+example Nickel's calling conventions). Changes to the rule files go in a pull
+request of their own.
 
 ## Automated tests
 

@@ -18,7 +18,9 @@ bool nt_is_epub(const QString &path) {
 }
 
 static QString nt_attr(const QString &tag, const char *attr) {
-    QRegularExpression re(QStringLiteral("\\b") + QString::fromLatin1(attr) + QStringLiteral("\\s*=\\s*[\"']([^\"']*)[\"']"), QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression re(QStringLiteral("\\b") + QString::fromLatin1(attr) +
+                              QStringLiteral("\\s*=\\s*[\"']([^\"']*)[\"']"),
+                          QRegularExpression::CaseInsensitiveOption);
     QRegularExpressionMatch m = re.match(tag);
     return m.hasMatch() ? m.captured(1) : QString();
 }
@@ -32,7 +34,10 @@ static QString nt_resolve(const QString &baseDir, const QString &href) {
     while (full.contains(QStringLiteral("/../"))) {
         int i = full.indexOf(QStringLiteral("/../"));
         int j = full.lastIndexOf(QLatin1Char('/'), i - 1);
-        if (j < 0) { full = full.mid(i + 4); break; }
+        if (j < 0) {
+            full = full.mid(i + 4);
+            break;
+        }
         full = full.left(j) + full.mid(i + 3);
     }
     return full;
@@ -44,7 +49,8 @@ static QString nt_opf_path(QFile &f, const QList<NtZipEntry> &entries) {
         if (en.name != QLatin1String("META-INF/container.xml")) continue;
         const QString xml = QString::fromUtf8(nt_zip_extract(f, en));
         // \b keeps <rootfiles>, which encloses the element, from matching.
-        const QRegularExpression rootfile(QStringLiteral("<rootfile\\b[^>]*>"), QRegularExpression::CaseInsensitiveOption);
+        const QRegularExpression rootfile(QStringLiteral("<rootfile\\b[^>]*>"),
+                                          QRegularExpression::CaseInsensitiveOption);
         return nt_attr(rootfile.match(xml).captured(0), "full-path");
     }
     return QString();
@@ -54,7 +60,8 @@ static QString nt_opf_path(QFile &f, const QList<NtZipEntry> &entries) {
 // the item named by <meta name="cover">, else an image whose href says "cover".
 static QString nt_cover_from_opf(const QString &opf, const QString &opfDir) {
     QString coverId;
-    QRegularExpression metaRe(QStringLiteral("<meta[^>]*name\\s*=\\s*[\"']cover[\"'][^>]*>"), QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression metaRe(QStringLiteral("<meta[^>]*name\\s*=\\s*[\"']cover[\"'][^>]*>"),
+                              QRegularExpression::CaseInsensitiveOption);
     QRegularExpressionMatch mm = metaRe.match(opf);
     if (mm.hasMatch()) coverId = nt_attr(mm.captured(0), "content");
 
@@ -63,7 +70,8 @@ static QString nt_cover_from_opf(const QString &opf, const QString &opfDir) {
     QString byProp, byId, byName;
     while (it.hasNext()) {
         const QString tag = it.next().captured(0);
-        const QString href = nt_attr(tag, "href"), id = nt_attr(tag, "id"), props = nt_attr(tag, "properties"), mt = nt_attr(tag, "media-type");
+        const QString href = nt_attr(tag, "href"), id = nt_attr(tag, "id"), props = nt_attr(tag, "properties"),
+                      mt = nt_attr(tag, "media-type");
         if (!mt.startsWith(QLatin1String("image/"))) continue;
         if (props.contains(QLatin1String("cover-image")) && byProp.isEmpty()) byProp = href;
         if (!coverId.isEmpty() && id == coverId && byId.isEmpty()) byId = href;
@@ -74,7 +82,8 @@ static QString nt_cover_from_opf(const QString &opf, const QString &opfDir) {
 }
 
 static QString nt_cover_from_opf_path(QFile &f, const QList<NtZipEntry> &entries, const QString &opfPath) {
-    const QString opfDir = opfPath.contains(QLatin1Char('/')) ? opfPath.left(opfPath.lastIndexOf(QLatin1Char('/'))) : QString();
+    const QString opfDir =
+        opfPath.contains(QLatin1Char('/')) ? opfPath.left(opfPath.lastIndexOf(QLatin1Char('/'))) : QString();
     for (const NtZipEntry &en : entries) {
         if (en.name == opfPath) return nt_cover_from_opf(QString::fromUtf8(nt_zip_extract(f, en)), opfDir);
     }
@@ -84,10 +93,12 @@ static QString nt_cover_from_opf_path(QFile &f, const QList<NtZipEntry> &entries
 // Fallback when the OPF names no cover: the largest JPEG or PNG whose name
 // mentions "cover", else the largest JPEG or PNG.
 static QString nt_largest_image(const QList<NtZipEntry> &entries) {
-    const NtZipEntry *best = NULL, *bestAny = NULL;
+    const NtZipEntry *best = nullptr, *bestAny = nullptr;
     for (const NtZipEntry &en : entries) {
         const QString n = en.name.toLower();
-        if (!(n.endsWith(QLatin1String(".jpg")) || n.endsWith(QLatin1String(".jpeg")) || n.endsWith(QLatin1String(".png")))) continue;
+        if (!(n.endsWith(QLatin1String(".jpg")) || n.endsWith(QLatin1String(".jpeg")) ||
+              n.endsWith(QLatin1String(".png"))))
+            continue;
         if (!bestAny || en.size > bestAny->size) bestAny = &en;
         if (n.contains(QLatin1String("cover")) && (!best || en.size > best->size)) best = &en;
     }
@@ -119,9 +130,11 @@ QByteArray nt_epub_cover_bytes(const QString &epubPath, QString *member) {
 
 // Cache file for this book's cover, keyed by path, size and modification time.
 static QString nt_cache_file(const QString &epubPath, const QFileInfo &fi, const QString &cacheDir) {
-    const QByteArray key = QCryptographicHash::hash(
-        (epubPath + QLatin1Char('|') + QString::number(fi.size()) + QLatin1Char('|') + QString::number(fi.lastModified().toTime_t())).toUtf8(),
-        QCryptographicHash::Md5).toHex();
+    const QByteArray key = QCryptographicHash::hash((epubPath + QLatin1Char('|') + QString::number(fi.size()) +
+                                                     QLatin1Char('|') + QString::number(fi.lastModified().toTime_t()))
+                                                        .toUtf8(),
+                                                    QCryptographicHash::Md5)
+                               .toHex();
     return cacheDir + QLatin1Char('/') + QString::fromLatin1(key) + QStringLiteral(".png");
 }
 
@@ -159,7 +172,8 @@ QPixmap nt_epub_cover(const QString &epubPath, const QString &cacheDir, int maxS
     QString coverMember;
     const QByteArray imageData = nt_epub_cover_bytes(epubPath, &coverMember);
     QImage img = QImage::fromData(imageData);
-    NT_DBG("epub: %s -> member '%s' (%d bytes) image %dx%d", qPrintable(epubPath), qPrintable(coverMember), imageData.size(), img.width(), img.height());
+    NT_DBG("epub: %s -> member '%s' (%d bytes) image %dx%d", qPrintable(epubPath), qPrintable(coverMember),
+           imageData.size(), img.width(), img.height());
     if (img.isNull()) {
         nt_write_marker(noneMarker);
         return QPixmap();

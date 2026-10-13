@@ -16,6 +16,8 @@
 #include <QSet>
 #include <QStringList>
 
+#include <utility>
+
 #include "addons.h"
 #include "grid.h"
 #include "nickel.h"
@@ -26,7 +28,7 @@
 
 namespace {
 
-const int kTilesPerPage = 6;    // two columns of three
+const int kTilesPerPage = 6;   // two columns of three
 
 // A tappable control. Kind Button: rounded box with centred text. Kind Check:
 // a check box followed by the text, left aligned (a row in the tile list).
@@ -36,13 +38,22 @@ public:
     enum Kind { Button, Check, Toggle };
 
     NtControl(QWidget *parent, Kind kind, const QString &text, std::function<void()> onTap)
-        : NtPressable(parent), m_kind(kind), m_text(text), m_onTap(onTap), m_checked(false) {
-        if (kind == Toggle) setFixedSize(150, 72);
-        else if (kind == Check) setFixedHeight(76);
-        else setFixedHeight(72);
+        : NtPressable(parent), m_kind(kind), m_text(text), m_onTap(std::move(onTap)), m_checked(false) {
+        if (kind == Toggle)
+            setFixedSize(150, 72);
+        else if (kind == Check)
+            setFixedHeight(76);
+        else
+            setFixedHeight(72);
     }
-    void setText(const QString &text) { m_text = text; update(); }
-    void setChecked(bool checked) { m_checked = checked; update(); }
+    void setText(const QString &text) {
+        m_text = text;
+        update();
+    }
+    void setChecked(bool checked) {
+        m_checked = checked;
+        update();
+    }
 
 protected:
     void tapped() override {
@@ -53,8 +64,10 @@ protected:
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing, true);
         p.fillRect(rect(), Qt::white);
-        if (m_kind == Check) paintCheck(p);
-        else paintBox(p);
+        if (m_kind == Check)
+            paintCheck(p);
+        else
+            paintBox(p);
     }
 
 private:
@@ -71,15 +84,14 @@ private:
         if (m_checked) {
             p.setPen(QPen(fg, 7, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
             QPolygon tick;
-            tick << QPoint(cb.left() + 10, cb.center().y() + 1)
-                 << QPoint(cb.left() + 19, cb.bottom() - 10)
+            tick << QPoint(cb.left() + 10, cb.center().y() + 1) << QPoint(cb.left() + 19, cb.bottom() - 10)
                  << QPoint(cb.right() - 8, cb.top() + 10);
             p.drawPolyline(tick);
         }
         p.setPen(fg);
         p.setFont(nt_font(this, 28));
-        p.drawText(QRect(cb.right() + 18, 0, width() - cb.right() - 24, height()),
-                   Qt::AlignLeft | Qt::AlignVCenter, p.fontMetrics().elidedText(m_text, Qt::ElideRight, width() - cb.right() - 24));
+        p.drawText(QRect(cb.right() + 18, 0, width() - cb.right() - 24, height()), Qt::AlignLeft | Qt::AlignVCenter,
+                   p.fontMetrics().elidedText(m_text, Qt::ElideRight, width() - cb.right() - 24));
     }
 
     void paintBox(QPainter &p) {
@@ -112,7 +124,7 @@ private:
 };
 
 NtControl *ntButton(QWidget *parent, const QString &text, int width, std::function<void()> onTap) {
-    NtControl *b = new NtControl(parent, NtControl::Button, text, onTap);
+    NtControl *b = new NtControl(parent, NtControl::Button, text, std::move(onTap));
     b->setFixedWidth(width);
     return b;
 }
@@ -125,10 +137,15 @@ QLabel *ntLabel(QWidget *parent, const QString &text, int px, bool bold = false)
 }
 
 // Display names, in the order the source button cycles through them.
-struct SourceName { NtRecentSource source; const char *name; };
+struct SourceName {
+    NtRecentSource source;
+    const char *name;
+};
 const SourceName kSources[] = {
-    {NtRecentSource::Any, "Any app"}, {NtRecentSource::Koreader, "KOReader"},
-    {NtRecentSource::Plato, "Plato"}, {NtRecentSource::Nickel, "Kobo reader"},
+    {NtRecentSource::Any, "Any app"},
+    {NtRecentSource::Koreader, "KOReader"},
+    {NtRecentSource::Plato, "Plato"},
+    {NtRecentSource::Nickel, "Kobo reader"},
 };
 const int kSourceCount = sizeof(kSources) / sizeof(kSources[0]);
 
@@ -149,11 +166,17 @@ public:
     NtTileList(QWidget *parent, const QStringList &labels, const QStringList &hidden)
         : m_labels(labels), m_hidden(QSet<QString>::fromList(hidden)), m_page(0) {
         m_title = ntLabel(parent, QStringLiteral("Tiles to show"), 32, true);
-        m_prev = ntButton(parent, QStringLiteral("‹"), 90, [this]() { m_page--; refresh(); });
+        m_prev = ntButton(parent, QStringLiteral("‹"), 90, [this]() {
+            m_page--;
+            refresh();
+        });
         m_pageLabel = ntLabel(parent, QString(), 26);
         m_pageLabel->setAlignment(Qt::AlignCenter);
         m_pageLabel->setFixedWidth(120);
-        m_next = ntButton(parent, QStringLiteral("›"), 90, [this]() { m_page++; refresh(); });
+        m_next = ntButton(parent, QStringLiteral("›"), 90, [this]() {
+            m_page++;
+            refresh();
+        });
         for (int i = 0; i < kTilesPerPage; i++)
             m_checks << new NtControl(parent, NtControl::Check, QString(), [this, i]() { toggleTile(i); });
     }
@@ -217,8 +240,10 @@ private:
         const int index = m_page * kTilesPerPage + slot;
         if (index >= m_labels.size()) return;
         const QString &l = m_labels.at(index);
-        if (m_hidden.contains(l)) m_hidden.remove(l);
-        else m_hidden.insert(l);
+        if (m_hidden.contains(l))
+            m_hidden.remove(l);
+        else
+            m_hidden.insert(l);
         refresh();
     }
 
@@ -227,13 +252,13 @@ private:
     int m_page;
     QLabel *m_title, *m_pageLabel;
     NtControl *m_prev, *m_next;
-    QList<NtControl*> m_checks;
+    QList<NtControl *> m_checks;
 };
 
 class NtSettingsView : public QWidget {
 public:
     NtSettingsView(QWidget *view, const QStringList &labels, std::function<void()> onSaved)
-        : QWidget(view), m_view(view), m_labels(labels), m_onSaved(onSaved), m_tiles(0) {
+        : QWidget(view), m_view(view), m_labels(labels), m_onSaved(std::move(onSaved)), m_tiles(nullptr) {
         setObjectName(QStringLiteral("ntSettings"));
         setAttribute(Qt::WA_AcceptTouchEvents, true);
         load();
@@ -244,9 +269,7 @@ public:
         view->installEventFilter(this);
     }
 
-    ~NtSettingsView() {
-        delete m_tiles;
-    }
+    ~NtSettingsView() override { delete m_tiles; }
 
     bool eventFilter(QObject *watched, QEvent *e) override {
         if (watched == m_view && e->type() == QEvent::Hide && !isHidden()) {
@@ -262,8 +285,12 @@ protected:
     // Swallow touches that land between controls so nothing underneath reacts.
     bool event(QEvent *e) override {
         switch (e->type()) {
-        case QEvent::TouchBegin: case QEvent::TouchUpdate: case QEvent::TouchEnd: case QEvent::TouchCancel:
-        case QEvent::MouseButtonPress: case QEvent::MouseButtonRelease:
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+        case QEvent::TouchCancel:
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonRelease:
             e->accept();
             return true;
         default:
@@ -281,9 +308,7 @@ private:
         m_state = m_initial;
     }
 
-    bool fits(int columns, int px) const {
-        return nt_tiles_fit(columns, px, nt_grid_width());
-    }
+    bool fits(int columns, int px) const { return nt_tiles_fit(columns, px, nt_grid_width()); }
 
     // The fixed size `step` px away from the current one; leaving automatic
     // starts from the size automatic gives now.
@@ -297,7 +322,8 @@ private:
     // controls on the right. If noteOut is given, it receives the note label
     // so the note can be set later; the label is made even when the note is
     // empty.
-    QHBoxLayout *row(QVBoxLayout *into, const QString &name, const QString &note = QString(), QLabel **noteOut = 0) {
+    QHBoxLayout *row(QVBoxLayout *into, const QString &name, const QString &note = QString(),
+                     QLabel **noteOut = nullptr) {
         QHBoxLayout *h = new QHBoxLayout();
         h->setSpacing(14);
         QVBoxLayout *text = new QVBoxLayout();
@@ -314,12 +340,15 @@ private:
     }
 
     NtControl *toggle(std::function<void()> onTap) {
-        return new NtControl(this, NtControl::Toggle, QString(), onTap);
+        return new NtControl(this, NtControl::Toggle, QString(), std::move(onTap));
     }
 
     // A Check control in row `h` that flips *flag on each tap.
     NtControl *flagCheck(QHBoxLayout *h, const QString &text, int width, bool *flag) {
-        NtControl *c = new NtControl(this, NtControl::Check, text, [this, flag]() { *flag = !*flag; refresh(); });
+        NtControl *c = new NtControl(this, NtControl::Check, text, [this, flag]() {
+            *flag = !*flag;
+            refresh();
+        });
         c->setFixedWidth(width);
         h->addWidget(c);
         return c;
@@ -336,7 +365,7 @@ private:
     // Nickel draws its status bar over the top of the home view; Kobo's own
     // home content (mainContainer) starts below it. Fallback: 110 px.
     int topInset() const {
-        for (QWidget *c : m_view->findChildren<QWidget*>(QStringLiteral("mainContainer"))) {
+        for (QWidget *c : m_view->findChildren<QWidget *>(QStringLiteral("mainContainer"))) {
             const int y = c->mapTo(m_view, QPoint(0, 0)).y();
             if (y > 0 && y < m_view->height() / 3) return y;
         }
@@ -358,7 +387,8 @@ private:
 
         QHBoxLayout *bottom = new QHBoxLayout();
         bottom->setSpacing(24);
-        NtControl *cancel = new NtControl(this, NtControl::Button, QStringLiteral("Cancel"), [this]() { close(false); });
+        NtControl *cancel =
+            new NtControl(this, NtControl::Button, QStringLiteral("Cancel"), [this]() { close(false); });
         NtControl *save = new NtControl(this, NtControl::Button, QStringLiteral("Save"), [this]() { close(true); });
         cancel->setFixedHeight(90);
         save->setFixedHeight(90);
@@ -369,14 +399,23 @@ private:
 
     void buildSizeRows(QVBoxLayout *v) {
         QHBoxLayout *h = row(v, QStringLiteral("Tiles per row"));
-        m_colsDown = ntButton(this, QStringLiteral("−"), 90, [this]() { m_state.columns--; refresh(); });
+        m_colsDown = ntButton(this, QStringLiteral("−"), 90, [this]() {
+            m_state.columns--;
+            refresh();
+        });
         h->addWidget(m_colsDown);
         m_colsValue = value(h);
-        m_colsUp = ntButton(this, QStringLiteral("+"), 90, [this]() { m_state.columns++; refresh(); });
+        m_colsUp = ntButton(this, QStringLiteral("+"), 90, [this]() {
+            m_state.columns++;
+            refresh();
+        });
         h->addWidget(m_colsUp);
 
         h = row(v, QStringLiteral("Tile size"));
-        m_pxAuto = ntButton(this, QStringLiteral("Auto"), 120, [this]() { m_state.tilePx = 0; refresh(); });
+        m_pxAuto = ntButton(this, QStringLiteral("Auto"), 120, [this]() {
+            m_state.tilePx = 0;
+            refresh();
+        });
         h->addWidget(m_pxAuto);
         m_pxDown = ntButton(this, QStringLiteral("−"), 90, [this]() { stepTileSize(-20); });
         h->addWidget(m_pxDown);
@@ -386,12 +425,19 @@ private:
     }
 
     void buildRecentRows(QVBoxLayout *v) {
-        QHBoxLayout *h = row(v, QStringLiteral("Continue reading tile"), QStringLiteral("Your most recent book, opened in the app that read it"));
-        m_recent = toggle([this]() { m_state.recent = !m_state.recent; refresh(); });
+        QHBoxLayout *h = row(v, QStringLiteral("Continue reading tile"),
+                             QStringLiteral("Your most recent book, opened in the app that read it"));
+        m_recent = toggle([this]() {
+            m_state.recent = !m_state.recent;
+            refresh();
+        });
         h->addWidget(m_recent);
 
         h = row(v, QStringLiteral("Most recent book from"));
-        m_source = ntButton(this, QString(), 314, [this]() { m_state.recentSource = nextSource(m_state.recentSource); refresh(); });
+        m_source = ntButton(this, QString(), 314, [this]() {
+            m_state.recentSource = nextSource(m_state.recentSource);
+            refresh();
+        });
         h->addWidget(m_source);
 
         h = row(v, QStringLiteral("Tile shows"));
@@ -402,11 +448,18 @@ private:
 
         h = row(v, QStringLiteral("Sleep screen shows that book"),
                 QStringLiteral("Also turn on Kobo's “Show book covers full screen”"));
-        m_sleep = toggle([this]() { m_state.sleepCover = !m_state.sleepCover; refresh(); });
+        m_sleep = toggle([this]() {
+            m_state.sleepCover = !m_state.sleepCover;
+            refresh();
+        });
         h->addWidget(m_sleep);
 
-        h = row(v, QStringLiteral("Hide Kobo's home rows"), QStringLiteral("Off shows Kobo's own home widgets under the tiles"));
-        m_hideRows = toggle([this]() { m_state.hideRows = !m_state.hideRows; refresh(); });
+        h = row(v, QStringLiteral("Hide Kobo's home rows"),
+                QStringLiteral("Off shows Kobo's own home widgets under the tiles"));
+        m_hideRows = toggle([this]() {
+            m_state.hideRows = !m_state.hideRows;
+            refresh();
+        });
         h->addWidget(m_hideRows);
     }
 
@@ -422,7 +475,9 @@ private:
         QStringList names;
         for (const QString &library : restored) names << nt_addon_name(library);
         nt_toast(restored.isEmpty() ? QStringLiteral("Nothing to repair")
-                                    : names.join(QStringLiteral(", ")) + QStringLiteral(" turned back on. Restart the reader to load them."), 4000);
+                                    : names.join(QStringLiteral(", ")) +
+                                          QStringLiteral(" turned back on. Restart the reader to load them."),
+                 4000);
         refreshRepairRow();
     }
 
@@ -433,7 +488,8 @@ private:
         if (off.isEmpty())
             m_repairNote->setText(QStringLiteral("None. A crash right after Kobo starts can switch add-ons off."));
         else if (!nt_addons_settled())
-            m_repairNote->setText(names.join(QStringLiteral(", ")) + QStringLiteral(" (still starting; check again in half a minute)"));
+            m_repairNote->setText(names.join(QStringLiteral(", ")) +
+                                  QStringLiteral(" (still starting; check again in half a minute)"));
         else
             m_repairNote->setText(names.join(QStringLiteral(", ")));
         // Before every failsafe window has passed, a renamed library may just be starting up.
@@ -490,7 +546,7 @@ private:
     QStringList m_labels;
     std::function<void()> m_onSaved;
     NtSettings m_initial;
-    NtSettings m_state;        // edited copy; `hidden` is taken from m_tiles on save
+    NtSettings m_state;   // edited copy; `hidden` is taken from m_tiles on save
     NtTileList *m_tiles;
     NtControl *m_colsDown, *m_colsUp, *m_pxAuto, *m_pxDown, *m_pxUp, *m_recent, *m_source, *m_sleep, *m_hideRows;
     NtControl *m_infoCover, *m_infoTitle, *m_infoAuthor, *m_infoProgress, *m_repair;
@@ -498,15 +554,15 @@ private:
     QLabel *m_colsValue, *m_pxValue;
 };
 
-} // namespace
+}   // namespace
 
 void nt_open_settings(QWidget *view, const QStringList &labels, std::function<void()> onSaved) {
     if (!view) return;
-    if (QWidget *open = view->findChild<QWidget*>(QStringLiteral("ntSettings"), Qt::FindDirectChildrenOnly)) {
+    if (QWidget *open = view->findChild<QWidget *>(QStringLiteral("ntSettings"), Qt::FindDirectChildrenOnly)) {
         open->raise();
         return;
     }
-    NtSettingsView *s = new NtSettingsView(view, labels, onSaved);
+    NtSettingsView *s = new NtSettingsView(view, labels, std::move(onSaved));
     s->setGeometry(view->rect());
     s->raise();
     s->show();

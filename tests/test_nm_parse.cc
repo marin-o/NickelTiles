@@ -19,16 +19,15 @@ QList<NtEntry> readMenus() {
     return nt_read_nickelmenu_entries(nmDir());
 }
 
-const char kMenus[] =
-    "# NickelMenu\n"
-    "menu_item:main:KOReader:cmd_spawn:/mnt/onboard/.adds/koreader/koreader.sh  # launch\n"
-    ": menu_item : main : Update : cmd_spawn : /bin/update.sh\n"
-    "chain_success:cmd_output:20:/bin/echo done\n"
-    "chain_failure:dbg_toast:failed\n"
-    "chain_always:dbg_toast:always\n"
-    "menu_item:main:Terminal:cmd_spawn:echo a:b\n";
+const char kMenus[] = "# NickelMenu\n"
+                      "menu_item:main:KOReader:cmd_spawn:/mnt/onboard/.adds/koreader/koreader.sh  # launch\n"
+                      ": menu_item : main : Update : cmd_spawn : /bin/update.sh\n"
+                      "chain_success:cmd_output:20:/bin/echo done\n"
+                      "chain_failure:dbg_toast:failed\n"
+                      "chain_always:dbg_toast:always\n"
+                      "menu_item:main:Terminal:cmd_spawn:echo a:b\n";
 
-}  // namespace
+}   // namespace
 
 class TestNmParse : public QObject {
     Q_OBJECT
@@ -72,12 +71,11 @@ void TestNmParse::chainsAttachToTheirItem() {
 void TestNmParse::otherMenusAndLinesAreSkipped() {
     // A chapter-menu item and a generator end the current entry, so the chain
     // lines after them attach to nothing.
-    writeMenu(QStringLiteral("menus"),
-        QByteArray("menu_item:chapter:Other:cmd_spawn:x\n"
-                   "chain_success:dbg_toast:orphan\n"
-                   "menu_item:main:Gen:cmd_spawn:a\n"
-                   "generator:something\n"
-                   "chain_success:dbg_toast:lost\n"));
+    writeMenu(QStringLiteral("menus"), QByteArray("menu_item:chapter:Other:cmd_spawn:x\n"
+                                                  "chain_success:dbg_toast:orphan\n"
+                                                  "menu_item:main:Gen:cmd_spawn:a\n"
+                                                  "generator:something\n"
+                                                  "chain_success:dbg_toast:lost\n"));
     const QList<NtEntry> entries = readMenus();
     QCOMPARE(entries.size(), 1);
     QCOMPARE(entries.at(0).label, QStringLiteral("Gen"));

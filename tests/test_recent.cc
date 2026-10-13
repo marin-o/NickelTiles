@@ -19,8 +19,8 @@ QString bookPath(const QString &name) {
 
 // KOReader's history.lua: the newest entry comes first.
 void writeKoreaderHistory(const QString &file, qint64 time) {
-    const QByteArray text = "return {\n [1] = {\n  [\"file\"] = \"" + file.toUtf8()
-        + "\",\n  [\"time\"] = " + QByteArray::number(time) + ",\n },\n}\n";
+    const QByteArray text = "return {\n [1] = {\n  [\"file\"] = \"" + file.toUtf8() +
+                            "\",\n  [\"time\"] = " + QByteArray::number(time) + ",\n },\n}\n";
     QVERIFY(writeFile(QStringLiteral(NT_KOREADER_HISTORY), text));
 }
 
@@ -29,10 +29,10 @@ void writeKoreaderHistory(const QString &file, qint64 time) {
 void writePlatoBook() {
     QVERIFY(writeFile(QStringLiteral(NT_ONBOARD "/books/b.epub"), QByteArray("book")));
     QVERIFY(writeFile(QStringLiteral(NT_PLATO_METADATA),
-        QByteArray("{\"abc123\": {\"file\": {\"path\": \"books/b.epub\"}, "
-                   "\"title\": \"Plato Book\", \"author\": \"Ann Author\"}}")));
+                      QByteArray("{\"abc123\": {\"file\": {\"path\": \"books/b.epub\"}, "
+                                 "\"title\": \"Plato Book\", \"author\": \"Ann Author\"}}")));
     QVERIFY(writeFile(QStringLiteral(NT_PLATO_STATES) + QStringLiteral("/abc123.json"),
-        QByteArray("{\"opened\": \"2026-10-01 12:00:00\", \"currentPage\": 30, \"pagesCount\": 120}")));
+                      QByteArray("{\"opened\": \"2026-10-01 12:00:00\", \"currentPage\": 30, \"pagesCount\": 120}")));
 }
 
 // Plato writes local time without a zone, so the expectation is local too.
@@ -40,7 +40,7 @@ qint64 platoOpenedTime() {
     return QDateTime(QDate(2026, 10, 1), QTime(12, 0, 0)).toSecsSinceEpoch();
 }
 
-}  // namespace
+}   // namespace
 
 class TestRecent : public QObject {
     Q_OBJECT
@@ -58,8 +58,8 @@ void TestRecent::koreaderBookWithSidecar() {
     const QString file = bookPath(QStringLiteral("a.epub"));
     QVERIFY(writeFile(file, QByteArray("book")));
     QVERIFY(writeFile(bookPath(QStringLiteral("a.sdr/metadata.epub.lua")),
-        QByteArray("return {\n [\"doc_props\"] = {\n  [\"title\"] = \"Test Book\",\n"
-                   "  [\"authors\"] = \"Jane Doe\",\n },\n [\"percent_finished\"] = 0.42,\n}\n")));
+                      QByteArray("return {\n [\"doc_props\"] = {\n  [\"title\"] = \"Test Book\",\n"
+                                 "  [\"authors\"] = \"Jane Doe\",\n },\n [\"percent_finished\"] = 0.42,\n}\n")));
     writeKoreaderHistory(file, kKoreaderTime);
 
     const NtRecentBook book = nt_recent_book(NtRecentSource::Koreader);

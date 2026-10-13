@@ -21,7 +21,7 @@ class NtTile;
 // What a tile reports to the grid that holds it.
 class NtTileHost {
 public:
-    virtual ~NtTileHost() {}
+    virtual ~NtTileHost() = default;
     virtual void tileTapped(NtTile *tile) = 0;
     virtual void tileLongPressed(NtTile *tile) = 0;
 };
