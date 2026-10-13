@@ -18,11 +18,10 @@ QFontMetrics metrics() {
 }
 
 void compareFitsWidth(const QStringList &lines, const QFontMetrics &fm, int width) {
-    for (const QString &line : lines)
-        QVERIFY2(fm.width(line) <= width, qPrintable(line));
+    for (const QString &line : lines) QVERIFY2(fm.width(line) <= width, qPrintable(line));
 }
 
-}  // namespace
+}   // namespace
 
 class TestUi : public QObject {
     Q_OBJECT
@@ -36,7 +35,8 @@ private slots:
 void TestUi::longTextWrapsAndElidesLastLine() {
     const QFontMetrics fm = metrics();
     const int width = 160;
-    const QString text = QStringLiteral("The quick brown fox jumps over the lazy dog while the farmer counts every sheep twice");
+    const QString text =
+        QStringLiteral("The quick brown fox jumps over the lazy dog while the farmer counts every sheep twice");
     const QStringList lines = nt_wrap(text, fm, width, 3);
     QCOMPARE(lines.size(), 3);
     QVERIFY(lines.first().startsWith(QStringLiteral("The")));

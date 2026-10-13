@@ -4,7 +4,7 @@
 #include <QStringList>
 #include <QVector>
 
-#include <string.h>
+#include <cstring>
 
 #include "config.h"
 #include "util.h"
@@ -34,10 +34,14 @@ NtRecentSource parseSource(const char *value) {
 
 const char *sourceName(NtRecentSource source) {
     switch (source) {
-    case NtRecentSource::Koreader: return "koreader";
-    case NtRecentSource::Plato: return "plato";
-    case NtRecentSource::Nickel: return "nickel";
-    case NtRecentSource::Any: break;
+    case NtRecentSource::Koreader:
+        return "koreader";
+    case NtRecentSource::Plato:
+        return "plato";
+    case NtRecentSource::Nickel:
+        return "nickel";
+    case NtRecentSource::Any:
+        break;
     }
     return "auto";
 }
@@ -56,8 +60,7 @@ NtRecentInfo parseInfo(const char *value) {
 QStringList parseHidden() {
     QStringList hidden;
     for (const nt_entry_t *e = nt_config_entries(); e; e = e->next)
-        if (!strcmp(e->key, kKeyHide))
-            hidden << QString::fromUtf8(e->val).trimmed();
+        if (!strcmp(e->key, kKeyHide)) hidden << QString::fromUtf8(e->val).trimmed();
     return hidden;
 }
 
@@ -95,21 +98,19 @@ QString flag(bool value) {
 // The UTF-8 bytes live in this function, so the pointer config_set reads stays valid.
 bool setValue(const char *key, const QString &value) {
     const QByteArray bytes = value.toUtf8();
-    const char *vals[] = { bytes.constData() };
+    const char *vals[] = {bytes.constData()};
     return nt_config_set(key, vals, 1);
 }
 
 bool saveHidden(const QStringList &hidden) {
     QVector<QByteArray> bytes;
-    for (const QString &label : hidden)
-        bytes << label.toUtf8();
+    for (const QString &label : hidden) bytes << label.toUtf8();
     QVector<const char *> vals;
-    for (const QByteArray &b : bytes)
-        vals << b.constData();
+    for (const QByteArray &b : bytes) vals << b.constData();
     return nt_config_set(kKeyHide, vals.constData(), vals.size());
 }
 
-} // namespace
+}   // namespace
 
 NtSettings nt_settings() {
     const NtSettings defaults;
@@ -146,11 +147,11 @@ bool nt_settings_save(const NtSettings &before, const NtSettings &after) {
         ok &= setValue(kKeyTilePx, after.tilePx > 0 ? QString::number(after.tilePx) : QStringLiteral("auto"));
     if (before.hidden != after.hidden) ok &= saveHidden(after.hidden);
     if (before.order != after.order)
-        ok &= after.order.isEmpty() ? nt_config_set(kKeyOrder, NULL, 0)
+        ok &= after.order.isEmpty() ? nt_config_set(kKeyOrder, nullptr, 0)
                                     : setValue(kKeyOrder, after.order.join(QStringLiteral("|")));
 
     NT_LOG("settings: saved ok=%d columns=%d px=%d recent=%d source=%s sleep=%d hide_rows=%d hidden=%d order=%d",
-        ok ? 1 : 0, after.columns, after.tilePx, after.recent ? 1 : 0, sourceName(after.recentSource),
-        after.sleepCover ? 1 : 0, after.hideRows ? 1 : 0, after.hidden.size(), after.order.size());
+           ok ? 1 : 0, after.columns, after.tilePx, after.recent ? 1 : 0, sourceName(after.recentSource),
+           after.sleepCover ? 1 : 0, after.hideRows ? 1 : 0, after.hidden.size(), after.order.size());
     return ok;
 }

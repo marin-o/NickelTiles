@@ -15,16 +15,15 @@ namespace {
 
 // Zips a folder tree with deflate, as real EPUBs are, so the reader's inflate
 // path runs. Member names use '/' on every platform.
-const char kZipScript[] =
-    "import os, sys, zipfile\n"
-    "src, out = sys.argv[1], sys.argv[2]\n"
-    "with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:\n"
-    "    for root, dirs, files in os.walk(src):\n"
-    "        for name in sorted(files):\n"
-    "            path = os.path.join(root, name)\n"
-    "            z.write(path, os.path.relpath(path, src).replace(os.sep, '/'))\n";
+const char kZipScript[] = "import os, sys, zipfile\n"
+                          "src, out = sys.argv[1], sys.argv[2]\n"
+                          "with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:\n"
+                          "    for root, dirs, files in os.walk(src):\n"
+                          "        for name in sorted(files):\n"
+                          "            path = os.path.join(root, name)\n"
+                          "            z.write(path, os.path.relpath(path, src).replace(os.sep, '/'))\n";
 
-}  // namespace
+}   // namespace
 
 void removeFixtures() {
     QDir(QStringLiteral(NT_TEST_ROOT)).removeRecursively();

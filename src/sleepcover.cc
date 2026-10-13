@@ -34,8 +34,7 @@ bool ownerHasPictures() {
 void clearSleepCover() {
     QDir dir(QStringLiteral(NT_SCREENSAVER_DIR));
     const QStringList ours = ownCovers();
-    for (const QString &name : ours)
-        dir.remove(name);
+    for (const QString &name : ours) dir.remove(name);
     QFile::remove(QStringLiteral(NT_SLEEP_COVER_STAMP));
 }
 
@@ -43,8 +42,8 @@ void clearSleepCover() {
 // extracted again, an unchanged one is not.
 QString stampKey(const NtRecentBook &book) {
     const QFileInfo info(book.path);
-    return book.path + QLatin1Char('|') + QString::number(info.size()) + QLatin1Char('|')
-        + QString::number(info.lastModified().toTime_t());
+    return book.path + QLatin1Char('|') + QString::number(info.size()) + QLatin1Char('|') +
+           QString::number(info.lastModified().toTime_t());
 }
 
 bool stampMatches(const QString &key) {
@@ -54,8 +53,7 @@ bool stampMatches(const QString &key) {
 
 void writeStamp(const QString &key) {
     QFile stamp(QStringLiteral(NT_SLEEP_COVER_STAMP));
-    if (stamp.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        stamp.write(key.toUtf8());
+    if (stamp.open(QIODevice::WriteOnly | QIODevice::Truncate)) stamp.write(key.toUtf8());
 }
 
 // Nickel's sleep screen lists the folder by extension, so only these are kept as they are.
@@ -134,11 +132,11 @@ void updateSleepCover(NtRecentSource source) {
     }
     if (!writeCover(data, ext)) return;
     writeStamp(key);
-    NT_LOG("sleep cover: %s '%s' (%d bytes, .%s)", nt_reader_app_name(book.app), qPrintable(book.title),
-        data.size(), qPrintable(ext));
+    NT_LOG("sleep cover: %s '%s' (%d bytes, .%s)", nt_reader_app_name(book.app), qPrintable(book.title), data.size(),
+           qPrintable(ext));
 }
 
-} // namespace
+}   // namespace
 
 void nt_sleep_cover_refresh(const NtSettings &settings) {
     if (!settings.enabled || !settings.sleepCover)

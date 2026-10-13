@@ -18,7 +18,7 @@ qint64 &startTime() {
     return t;
 }
 
-}  // namespace
+}   // namespace
 
 void nt_addons_mark_start() {
     startTime() = QDateTime::currentDateTime().toTime_t();
@@ -31,8 +31,9 @@ bool nt_addons_settled() {
 QStringList nt_switched_off_addons() {
     const QDir dir(QStringLiteral(NT_PLUGIN_DIR));
     QStringList off;
-    for (const QString &name : dir.entryList(QStringList(QStringLiteral("*.so") + QLatin1String(kFailsafeSuffix)), QDir::Files)) {
-        const QString library = name.left(name.size() - int(sizeof(kFailsafeSuffix) - 1));
+    for (const QString &name :
+         dir.entryList(QStringList(QStringLiteral("*.so") + QLatin1String(kFailsafeSuffix)), QDir::Files)) {
+        const QString library = name.left(name.size() - static_cast<int>(sizeof(kFailsafeSuffix) - 1));
         if (!dir.exists(library)) off << library;
     }
     return off;

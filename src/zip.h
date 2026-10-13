@@ -11,7 +11,7 @@
 
 struct NtZipEntry {
     QString name;
-    int method;          // 0 stored, 8 deflated
+    int method;   // 0 stored, 8 deflated
     quint32 compressedSize;
     quint32 size;
     quint32 localHeaderOffset;

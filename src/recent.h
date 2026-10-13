@@ -14,8 +14,8 @@ enum class NtReaderApp { Koreader, Plato, Nickel };
 struct NtRecentBook {
     bool valid = false;
     NtReaderApp app = NtReaderApp::Koreader;
-    QString path;          // the book file
-    QString contentId;     // Nickel's ContentID (Nickel books only)
+    QString path;        // the book file
+    QString contentId;   // Nickel's ContentID (Nickel books only)
     QString title;
     QString author;
     int percent = -1;      // -1 if unknown

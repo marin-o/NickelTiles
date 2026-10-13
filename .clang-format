@@ -1,0 +1,20 @@
+# The project's existing style, written down so it is checked rather than argued.
+BasedOnStyle: LLVM
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 120
+AccessModifierOffset: -4
+PointerAlignment: Right
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+NamespaceIndentation: None
+FixNamespaceComments: true
+SpacesBeforeTrailingComments: 3
+# Each file includes its own header first, then Qt, C, and local headers.
+SortIncludes: Never
+IncludeBlocks: Preserve

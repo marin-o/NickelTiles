@@ -20,10 +20,9 @@ const int kSqliteOpenReadOnly = 1;
 const int kSqliteRow = 100;
 
 // Nickel's last-read query: the newest file-backed book with a read time.
-const char kLastReadSql[] =
-    "select ContentID, Title, Attribution, DateLastRead, ___PercentRead from content "
-    "where ContentType='6' and ContentID like 'file://%' and DateLastRead is not null "
-    "order by DateLastRead desc limit 1";
+const char kLastReadSql[] = "select ContentID, Title, Attribution, DateLastRead, ___PercentRead from content "
+                            "where ContentType='6' and ContentID like 'file://%' and DateLastRead is not null "
+                            "order by DateLastRead desc limit 1";
 
 QString readText(const QString &path) {
     QFile f(path);
@@ -43,8 +42,10 @@ QString luaString(const QString &text, const char *key) {
         const QChar c = text.at(i);
         if (c == QLatin1Char('\\') && i + 1 < text.size()) {
             const QChar n = text.at(i + 1);
-            if (n == QLatin1Char('n') || n == QLatin1Char('\n')) out += QLatin1Char(' ');
-            else out += n;
+            if (n == QLatin1Char('n') || n == QLatin1Char('\n'))
+                out += QLatin1Char(' ');
+            else
+                out += n;
             i += 2;
             continue;
         }
@@ -81,10 +82,9 @@ void readKoreaderSidecar(const QString &file, NtRecentBook *book) {
 
     bool ok = false;
     const double fraction = luaBareValue(meta, "percent_finished", 24).toDouble(&ok);
-    if (ok) book->percent = int(fraction * 100.0 + 0.5);
+    if (ok) book->percent = qRound(fraction * 100.0);
 
-    if (book->title.isEmpty())
-        book->title = file.mid(slash + 1, (hasExt ? dot : file.size()) - slash - 1);
+    if (book->title.isEmpty()) book->title = file.mid(slash + 1, (hasExt ? dot : file.size()) - slash - 1);
 }
 
 // KOReader's most recent book, from history.lua (read once for both fields).
@@ -114,13 +114,13 @@ qint64 platoOpenedTime(const QJsonObject &state) {
     const QString opened = state.value(QStringLiteral("opened")).toString();
     QDateTime dt = QDateTime::fromString(opened, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
     if (!dt.isValid()) dt = QDateTime::fromString(opened, Qt::ISODate);
-    return dt.isValid() ? qint64(dt.toTime_t()) : -1;
+    return dt.isValid() ? static_cast<qint64>(dt.toTime_t()) : -1;
 }
 
 int platoPercent(const QJsonObject &state) {
     const double current = state.value(QStringLiteral("currentPage")).toDouble(-1);
     const double total = state.value(QStringLiteral("pagesCount")).toDouble(0);
-    return (current >= 0 && total > 0) ? int(current * 100.0 / total + 0.5) : -1;
+    return (current >= 0 && total > 0) ? qRound(current * 100.0 / total) : -1;
 }
 
 // Plato keeps its library index at the root of onboard: .metadata.json, one
@@ -152,13 +152,13 @@ NtRecentBook platoBook() {
             continue;
         }
         book.lastRead = opened;
-        book.path = QStringLiteral(NT_ONBOARD "/") + entry.value(QStringLiteral("file")).toObject().value(QStringLiteral("path")).toString();
+        book.path = QStringLiteral(NT_ONBOARD "/") +
+                    entry.value(QStringLiteral("file")).toObject().value(QStringLiteral("path")).toString();
         book.title = entry.value(QStringLiteral("title")).toString();
         book.author = entry.value(QStringLiteral("author")).toString();
         book.percent = platoPercent(state);
         book.valid = QFile::exists(book.path);
-        if (book.title.isEmpty())
-            book.title = book.path.section(QLatin1Char('/'), -1).section(QLatin1Char('.'), 0, -2);
+        if (book.title.isEmpty()) book.title = book.path.section(QLatin1Char('/'), -1).section(QLatin1Char('.'), 0, -2);
     }
     return book;
 }
@@ -176,13 +176,15 @@ struct Sqlite {
 };
 
 bool loadSqlite(Sqlite *s) {
-    s->open = (int (*)(const char *, void **, int, const char *))dlsym(RTLD_DEFAULT, "sqlite3_open_v2");
-    s->prepare = (int (*)(void *, const char *, int, void **, const char **))dlsym(RTLD_DEFAULT, "sqlite3_prepare_v2");
-    s->step = (int (*)(void *))dlsym(RTLD_DEFAULT, "sqlite3_step");
-    s->columnText = (const unsigned char *(*)(void *, int))dlsym(RTLD_DEFAULT, "sqlite3_column_text");
-    s->columnInt = (int (*)(void *, int))dlsym(RTLD_DEFAULT, "sqlite3_column_int");
-    s->finalize = (int (*)(void *))dlsym(RTLD_DEFAULT, "sqlite3_finalize");
-    s->close = (int (*)(void *))dlsym(RTLD_DEFAULT, "sqlite3_close");
+    s->open =
+        reinterpret_cast<int (*)(const char *, void **, int, const char *)>(dlsym(RTLD_DEFAULT, "sqlite3_open_v2"));
+    s->prepare = reinterpret_cast<int (*)(void *, const char *, int, void **, const char **)>(
+        dlsym(RTLD_DEFAULT, "sqlite3_prepare_v2"));
+    s->step = reinterpret_cast<int (*)(void *)>(dlsym(RTLD_DEFAULT, "sqlite3_step"));
+    s->columnText = reinterpret_cast<const unsigned char *(*)(void *, int)>(dlsym(RTLD_DEFAULT, "sqlite3_column_text"));
+    s->columnInt = reinterpret_cast<int (*)(void *, int)>(dlsym(RTLD_DEFAULT, "sqlite3_column_int"));
+    s->finalize = reinterpret_cast<int (*)(void *)>(dlsym(RTLD_DEFAULT, "sqlite3_finalize"));
+    s->close = reinterpret_cast<int (*)(void *)>(dlsym(RTLD_DEFAULT, "sqlite3_close"));
     return s->open && s->prepare && s->step && s->columnText && s->columnInt && s->finalize && s->close;
 }
 
@@ -197,7 +199,7 @@ qint64 nickelLastReadTime(QString when) {
     if (when.endsWith(QLatin1Char('Z'))) when.chop(1);
     QDateTime dt = QDateTime::fromString(when, QStringLiteral("yyyy-MM-ddTHH:mm:ss"));
     dt.setTimeSpec(Qt::UTC);
-    return dt.isValid() ? qint64(dt.toTime_t()) : 0;
+    return dt.isValid() ? static_cast<qint64>(dt.toTime_t()) : 0;
 }
 
 void readNickelRow(const Sqlite &sql, void *stmt, NtRecentBook *book) {
@@ -220,14 +222,14 @@ NtRecentBook nickelBook() {
         NT_DBG("recent (nickel): sqlite3 symbols unavailable");
         return book;
     }
-    void *db = NULL;
-    const int rc = sql.open(QStringLiteral(NT_KOBO_DB).toUtf8().constData(), &db, kSqliteOpenReadOnly, NULL);
+    void *db = nullptr;
+    const int rc = sql.open(QStringLiteral(NT_KOBO_DB).toUtf8().constData(), &db, kSqliteOpenReadOnly, nullptr);
     if (rc != 0 || !db) {
         if (db) sql.close(db);
         return book;
     }
-    void *stmt = NULL;
-    if (sql.prepare(db, kLastReadSql, -1, &stmt, NULL) == 0 && stmt) {
+    void *stmt = nullptr;
+    if (sql.prepare(db, kLastReadSql, -1, &stmt, nullptr) == 0 && stmt) {
         if (sql.step(stmt) == kSqliteRow) readNickelRow(sql, stmt, &book);
         sql.finalize(stmt);
     }
@@ -239,12 +241,12 @@ NtRecentBook nickelBook() {
 // times wins.
 void consider(NtRecentBook *best, const NtRecentBook &candidate) {
     NT_DBG("recent candidate %s: valid=%d time=%lld '%s' %d%%", nt_reader_app_name(candidate.app),
-        candidate.valid ? 1 : 0, (long long)candidate.lastRead, qPrintable(candidate.title), candidate.percent);
-    if (candidate.valid && (!best->valid || candidate.lastRead > best->lastRead))
-        *best = candidate;
+           candidate.valid ? 1 : 0, static_cast<long long>(candidate.lastRead), qPrintable(candidate.title),
+           candidate.percent);
+    if (candidate.valid && (!best->valid || candidate.lastRead > best->lastRead)) *best = candidate;
 }
 
-} // namespace
+}   // namespace
 
 NtRecentBook nt_recent_book(NtRecentSource source) {
     const bool any = source == NtRecentSource::Any;
@@ -264,8 +266,7 @@ void nt_open_recent_book(const NtRecentBook &book) {
         nt_run_command(QStringLiteral("Continue reading"), QStringLiteral("exec " NT_PLATO_LAUNCHER));
         return;
     }
-    if (book.app == NtReaderApp::Nickel && nt_open_in_nickel(book.contentId))
-        return;
+    if (book.app == NtReaderApp::Nickel && nt_open_in_nickel(book.contentId)) return;
     const QString command = QStringLiteral("exec " NT_KOREADER_LAUNCHER " ") + nt_shell_quote(book.path);
     nt_run_command(QStringLiteral("Continue reading"), command);
 }

@@ -1,0 +1,56 @@
+# Strict but not nuclear: checks that catch real bugs, needless copies, unclear
+# or outdated C++, and functions that grew too complex. Left out on purpose:
+# checks that fight Qt (implicit bool conversion of pointers, narrowing between
+# int and qint64), mass style mandates (braces around every one-line if,
+# trailing return types, auto everywhere), and anything needing C++14 or later.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-implicit-widening-of-multiplication-result,
+  clang-analyzer-*,
+  -clang-analyzer-optin.*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  performance-*,
+  -performance-enum-size,
+  misc-definitions-in-headers,
+  misc-misplaced-const,
+  misc-redundant-expression,
+  misc-static-assert,
+  misc-unused-parameters,
+  misc-unused-using-decls,
+  modernize-deprecated-headers,
+  modernize-loop-convert,
+  modernize-redundant-void-arg,
+  modernize-use-bool-literals,
+  modernize-use-equals-default,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-avoid-const-params-in-decls,
+  readability-const-return-type,
+  readability-container-size-empty,
+  readability-delete-null-pointer,
+  readability-duplicate-include,
+  readability-else-after-return,
+  readability-function-cognitive-complexity,
+  readability-inconsistent-declaration-parameter-name,
+  readability-make-member-function-const,
+  readability-misleading-indentation,
+  readability-non-const-parameter,
+  readability-redundant-*,
+  readability-simplify-boolean-expr,
+  readability-static-accessed-through-instance,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-virtual-class-destructor,
+  google-explicit-constructor,
+  google-readability-casting
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/src/[^/]*\.h$'
+CheckOptions:
+  # Small functions: a function past this needs splitting, not a waiver.
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 20
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true
