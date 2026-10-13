@@ -472,13 +472,20 @@ private:
 
     void repairAddons() {
         const QStringList restored = nt_restore_addons();
+        refreshRepairRow();
+        if (restored.isEmpty()) {
+            nt_toast(QStringLiteral("Nothing to repair"), 2500);
+            return;
+        }
         QStringList names;
         for (const QString &library : restored) names << nt_addon_name(library);
-        nt_toast(restored.isEmpty() ? QStringLiteral("Nothing to repair")
-                                    : names.join(QStringLiteral(", ")) +
-                                          QStringLiteral(" turned back on. Restart the reader to load them."),
-                 4000);
-        refreshRepairRow();
+        const QString done = names.join(QStringLiteral(", ")) + QStringLiteral(" turned back on.");
+        const bool asked = nt_confirm(
+            QStringLiteral("Add-ons repaired"), done + QStringLiteral(" They load the next time the reader restarts."),
+            QStringLiteral("Restart now"), QStringLiteral("Later"), []() {
+                if (!nt_reboot()) nt_toast(QStringLiteral("Could not restart; please restart the reader"), 4000);
+            });
+        if (!asked) nt_toast(done + QStringLiteral(" Restart the reader to load them."), 4000);
     }
 
     void refreshRepairRow() {

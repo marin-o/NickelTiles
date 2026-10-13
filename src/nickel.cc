@@ -2,6 +2,7 @@
 
 #include <QByteArray>
 #include <QCoreApplication>
+#include <QDialog>
 #include <QString>
 
 #include <cstdlib>
@@ -19,6 +20,8 @@ typedef void WirelessWorkflowManager;
 typedef void Device;
 typedef void Volume;
 typedef void ReadBookActionProxy;
+// A QDialog subclass with QDialog as its first base, so the pointer is a QDialog's.
+typedef QDialog ConfirmationDialog;
 
 static MainWindowController *(*MainWindowController_sharedInstance)() = nullptr;
 static void (*MainWindowController_toast)(MainWindowController *, QString const &, QString const &, int) = nullptr;
@@ -32,6 +35,11 @@ static void (*WirelessWorkflowManager_connectWirelessSilently)(WirelessWorkflowM
 static bool (*WirelessWorkflowManager_isAirplaneMode)(WirelessWorkflowManager *) = nullptr;
 static void (*WirelessWorkflowManager_setAirplaneMode)(WirelessWorkflowManager *, bool) = nullptr;
 static void (*MainNavController_home)(void *) = nullptr;
+static ConfirmationDialog *(*ConfirmationDialogFactory_getConfirmationDialog)(QWidget *) = nullptr;
+static void (*ConfirmationDialog_setTitle)(ConfirmationDialog *, QString const &) = nullptr;
+static void (*ConfirmationDialog_setText)(ConfirmationDialog *, QString const &) = nullptr;
+static void (*ConfirmationDialog_setAcceptButtonText)(ConfirmationDialog *, QString const &) = nullptr;
+static void (*ConfirmationDialog_setRejectButtonText)(ConfirmationDialog *, QString const &) = nullptr;
 // Used by nt_open_in_nickel. VolumeManager::getByIdBytes and the ReadBookActionProxy
 // calls are what Nickel's own library tap runs.
 static Device *(*Device_getCurrentDevice)() = nullptr;
@@ -91,6 +99,26 @@ struct nh_dlsym nt_nickel_dlsym[] = {
      .out = nh_symoutptr(MainNavController_home),
      .desc = nullptr,
      .optional = true},
+    {.name = "_ZN25ConfirmationDialogFactory21getConfirmationDialogEP7QWidget",
+     .out = nh_symoutptr(ConfirmationDialogFactory_getConfirmationDialog),
+     .desc = nullptr,
+     .optional = true},
+    {.name = "_ZN18ConfirmationDialog8setTitleERK7QString",
+     .out = nh_symoutptr(ConfirmationDialog_setTitle),
+     .desc = nullptr,
+     .optional = true},
+    {.name = "_ZN18ConfirmationDialog7setTextERK7QString",
+     .out = nh_symoutptr(ConfirmationDialog_setText),
+     .desc = nullptr,
+     .optional = true},
+    {.name = "_ZN18ConfirmationDialog19setAcceptButtonTextERK7QString",
+     .out = nh_symoutptr(ConfirmationDialog_setAcceptButtonText),
+     .desc = nullptr,
+     .optional = true},
+    {.name = "_ZN18ConfirmationDialog19setRejectButtonTextERK7QString",
+     .out = nh_symoutptr(ConfirmationDialog_setRejectButtonText),
+     .desc = nullptr,
+     .optional = true},
     {.name = "_ZN6Device16getCurrentDeviceEv",
      .out = nh_symoutptr(Device_getCurrentDevice),
      .desc = nullptr,
@@ -114,8 +142,9 @@ struct nh_dlsym nt_nickel_dlsym[] = {
 };
 
 void nt_nickel_log_symbols() {
-    NT_LOG("nickel symbols: toast=%p reboot=%p connectWireless=%p getByIdBytes=%p proxyCtor=%p",
+    NT_LOG("nickel symbols: toast=%p confirm=%p reboot=%p connectWireless=%p getByIdBytes=%p proxyCtor=%p",
            reinterpret_cast<void *>(MainWindowController_toast),
+           reinterpret_cast<void *>(ConfirmationDialogFactory_getConfirmationDialog),
            reinterpret_cast<void *>(N3PowerWorkflowManager_reboot),
            reinterpret_cast<void *>(WirelessWorkflowManager_connectWireless),
            reinterpret_cast<void *>(VolumeManager_getByIdBytes), reinterpret_cast<void *>(ReadBookActionProxy_ctor));
@@ -142,6 +171,25 @@ void nt_toast(const QString &text, int ms) {
         }
     }
     NT_LOG("toast (no Nickel toast available): %s", qPrintable(text));
+}
+
+bool nt_confirm(const QString &title, const QString &text, const QString &acceptText, const QString &rejectText,
+                const std::function<void()> &onAccept) {
+    if (!ConfirmationDialogFactory_getConfirmationDialog || !ConfirmationDialog_setTitle ||
+        !ConfirmationDialog_setText || !ConfirmationDialog_setAcceptButtonText ||
+        !ConfirmationDialog_setRejectButtonText)
+        return false;
+    ConfirmationDialog *dialog = ConfirmationDialogFactory_getConfirmationDialog(nullptr);
+    if (!dialog) return false;
+    ConfirmationDialog_setTitle(dialog, title);
+    ConfirmationDialog_setText(dialog, text);
+    ConfirmationDialog_setAcceptButtonText(dialog, acceptText);
+    ConfirmationDialog_setRejectButtonText(dialog, rejectText);
+    dialog->setModal(true);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    QObject::connect(dialog, &QDialog::accepted, onAccept);
+    dialog->open();
+    return true;
 }
 
 bool nt_power_off() {

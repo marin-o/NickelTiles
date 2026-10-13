@@ -98,7 +98,8 @@ If Kobo crashes within a few seconds of starting (it can happen when an app
 hands control back to Kobo), NickelHook add-ons switch themselves off to avoid
 a crash loop, and stay off: NickelMenu disappears, KPM's window no longer
 opens, and so on. *Tiles settings > Switched-off add-ons* lists them; Repair
-turns them back on, then restart the reader. The button waits until Kobo has
+turns them back on and offers to restart the reader now or later (they load
+at the next restart). The button waits until Kobo has
 been running for 30 seconds, because every add-on is briefly in that state
 while it starts.
 
