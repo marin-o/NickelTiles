@@ -3,7 +3,7 @@
 #include <QtTest>
 
 #include "fixtures.h"
-#include "nm_parse.h"
+#include "kobo/nm_parse.h"
 
 namespace {
 

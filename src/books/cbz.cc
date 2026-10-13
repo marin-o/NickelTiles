@@ -1,9 +1,9 @@
-#include "cbz.h"
+#include "books/cbz.h"
 
 #include <QFile>
 #include <QList>
 
-#include "zip.h"
+#include "books/zip.h"
 
 bool nt_is_cbz(const QString &path) {
     return path.endsWith(QStringLiteral(".cbz"), Qt::CaseInsensitive);

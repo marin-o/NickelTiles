@@ -1,4 +1,4 @@
-#include "settings_model.h"
+#include "core/settings_model.h"
 
 #include <QByteArray>
 #include <QStringList>
@@ -6,8 +6,8 @@
 
 #include <cstring>
 
-#include "config.h"
-#include "util.h"
+#include "core/config.h"
+#include "core/util.h"
 
 namespace {
 

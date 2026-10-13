@@ -1,12 +1,12 @@
 #include <QWidget>
 
-#include "addons.h"
-#include "config.h"
-#include "grid.h"
-#include "nickel.h"
-#include "settings_model.h"
-#include "sleepcover.h"
-#include "util.h"
+#include "kobo/addons.h"
+#include "core/config.h"
+#include "ui/grid.h"
+#include "kobo/nickel.h"
+#include "core/settings_model.h"
+#include "books/sleepcover.h"
+#include "core/util.h"
 
 typedef QWidget HomePageView;
 typedef void Ui_HomePageView;

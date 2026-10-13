@@ -5,7 +5,7 @@
 #include <QImage>
 #include <QMap>
 
-#include "epub.h"
+#include "books/epub.h"
 #include "fixtures.h"
 
 namespace {

@@ -5,7 +5,7 @@
 #include <QFont>
 #include <QFontMetrics>
 
-#include "ui.h"
+#include "ui/ui.h"
 
 namespace {
 

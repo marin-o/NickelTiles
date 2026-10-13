@@ -7,7 +7,7 @@
 
 #include <QString>
 
-#include "settings_model.h"
+#include "core/settings_model.h"
 
 enum class NtReaderApp { Koreader, Plato, Nickel };
 

@@ -1,4 +1,4 @@
-#include "recent.h"
+#include "books/recent.h"
 
 #include <QDateTime>
 #include <QDir>
@@ -10,10 +10,10 @@
 
 #include <dlfcn.h>
 
-#include "actions.h"
-#include "nickel.h"
-#include "paths.h"
-#include "util.h"
+#include "kobo/actions.h"
+#include "kobo/nickel.h"
+#include "core/paths.h"
+#include "core/util.h"
 
 namespace {
 

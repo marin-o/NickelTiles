@@ -5,7 +5,7 @@
 
 #include <QImage>
 
-#include "fb2.h"
+#include "books/fb2.h"
 #include "fixtures.h"
 
 class TestFb2 : public QObject {

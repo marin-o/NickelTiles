@@ -1,12 +1,12 @@
-#include "nm_parse.h"
+#include "kobo/nm_parse.h"
 
 #include <QDir>
 #include <QFile>
 #include <QStringList>
 #include <QTextStream>
 
-#include "paths.h"
-#include "util.h"
+#include "core/paths.h"
+#include "core/util.h"
 
 // NickelMenu syntax: fields separated by ':' with surrounding whitespace
 // ignored; the last field keeps any further ':'.

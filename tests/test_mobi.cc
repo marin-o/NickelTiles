@@ -7,7 +7,7 @@
 #include <QList>
 
 #include "fixtures.h"
-#include "mobi.h"
+#include "books/mobi.h"
 
 namespace {
 

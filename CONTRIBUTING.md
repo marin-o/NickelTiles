@@ -98,8 +98,9 @@ Say in the pull request which device and firmware you tested on.
 
 Read [docs/architecture.md](docs/architecture.md) first. In short:
 
-- One module per job, each documented in its header. Prefer extending a
-  module over adding code to `plugin.cc` or `grid.cc`.
+- One module per job, each documented in its header, in the folder for its
+  layer (`core/`, `kobo/`, `books/`, `ui/`). Prefer extending a module over
+  adding code to `plugin.cc` or `ui/grid.cc`.
 - Toolchain limits: GCC 4.9, C++11, Qt 5.2.1. No exceptions, no moc.
 - Settings are read through `nt_settings()` and saved through
   `nt_settings_save()`; new settings get their key and default in

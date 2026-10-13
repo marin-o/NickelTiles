@@ -1,11 +1,11 @@
-#include "fb2.h"
+#include "books/fb2.h"
 
 #include <QFile>
 #include <QList>
 #include <QXmlStreamReader>
 
-#include "util.h"
-#include "zip.h"
+#include "core/util.h"
+#include "books/zip.h"
 
 bool nt_is_fb2(const QString &path) {
     const QString lower = path.toLower();

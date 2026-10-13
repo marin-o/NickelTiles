@@ -58,10 +58,20 @@ $(OBJ)/fixtures.o: fixtures.cc fixtures.h | $(OBJ)
 $(OBJ)/stubs.o: stubs/stubs.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
-$(OBJ)/%.o: ../src/%.cc | $(OBJ)
+# The modules live in src/<folder>/; objects are named after the file alone.
+$(OBJ)/%.o: ../src/core/%.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
-$(OBJ)/%.o: ../src/%.c | $(OBJ)
+$(OBJ)/%.o: ../src/kobo/%.cc | $(OBJ)
+	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
+
+$(OBJ)/%.o: ../src/books/%.cc | $(OBJ)
+	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
+
+$(OBJ)/%.o: ../src/ui/%.cc | $(OBJ)
+	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
+
+$(OBJ)/%.o: ../src/core/%.c | $(OBJ)
 	$(CC) $(CFLAGS_ALL) -c $< -o $@
 
 $(OBJ):

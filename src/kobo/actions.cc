@@ -1,4 +1,4 @@
-#include "actions.h"
+#include "kobo/actions.h"
 
 #include <QProcess>
 #include <QString>
@@ -6,9 +6,9 @@
 
 #include <cstdio>
 
-#include "nickel.h"
-#include "paths.h"
-#include "util.h"
+#include "kobo/nickel.h"
+#include "core/paths.h"
+#include "core/util.h"
 
 // Splits "head:tail" at the first ':', both sides trimmed. Without a ':' the
 // whole string is the head and the tail is empty.

@@ -10,7 +10,7 @@
 #include <QStringList>
 #include <QWidget>
 
-#include "layout.h"
+#include "ui/layout.h"
 
 // Inserts the grid into a freshly built home page, or rebuilds it with the
 // current settings (after the settings page saves).

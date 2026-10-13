@@ -6,7 +6,7 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "config.h"
+#include "core/config.h"
 
 #ifndef NH_VERSION
 #define NH_VERSION "dev"
