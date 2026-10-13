@@ -11,7 +11,7 @@
 
 #include <unistd.h>
 
-#include "epub.h"
+#include "cover.h"
 #include "paths.h"
 #include "recent.h"
 #include "util.h"
@@ -108,8 +108,8 @@ void updateSleepCover(NtRecentSource source) {
         return;
     }
     const NtRecentBook book = nt_recent_book(source);
-    if (!book.valid || !nt_is_epub(book.path)) {
-        NT_LOG("sleep cover: no recent EPUB; leaving Nickel's own cover");
+    if (!book.valid) {
+        NT_LOG("sleep cover: no recent book; leaving Nickel's own cover");
         clearSleepCover();
         return;
     }
@@ -118,9 +118,9 @@ void updateSleepCover(NtRecentSource source) {
         NT_DBG("sleep cover: unchanged (%s)", qPrintable(book.title));
         return;
     }
-    QString member;
-    QByteArray data = nt_epub_cover_bytes(book.path, &member);
-    QString ext = member.section(QLatin1Char('.'), -1).toLower();
+    QString name;
+    QByteArray data = nt_book_cover_bytes(book.path, &name);
+    QString ext = name.section(QLatin1Char('.'), -1).toLower();
     if (!isListableExt(ext)) {
         data = reencodeAsPng(data);
         ext = QStringLiteral("png");

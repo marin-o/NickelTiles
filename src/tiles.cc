@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "config.h"
-#include "epub.h"
+#include "cover.h"
 #include "paths.h"
 #include "ui.h"
 #include "util.h"
@@ -213,8 +213,7 @@ void NtRecentTile::refresh() {
         return;
     }
     QPixmap cover;
-    if (m_recentCover && nt_is_epub(m_book.path))
-        cover = nt_epub_cover(m_book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
+    if (m_recentCover) cover = nt_book_cover(m_book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
     setIcon(cover.isNull() ? nt_icon_for(label(), QString()) : cover);
     setVisible(true);
     update();

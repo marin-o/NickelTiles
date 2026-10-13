@@ -19,7 +19,7 @@ TEST_DEFS := -DNT_CONFIG_DIR='"/tmp/nt-tests/config"' \
 	-DNH_VERSION='"test"'
 
 OBJ := build
-TESTS := test_layout test_config test_nm_parse test_epub test_ui test_recent
+TESTS := test_layout test_config test_nm_parse test_epub test_fb2 test_mobi test_ui test_recent
 
 CFLAGS_ALL := -fPIC -Wall -Wextra -I../src -Istubs -I$(OBJ) $(TEST_DEFS)
 CXXFLAGS_ALL := $(CFLAGS_ALL) -std=gnu++11 $(QT_CFLAGS) -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB
@@ -31,6 +31,8 @@ test_layout_OBJS := layout.o
 test_config_OBJS := util.o config.o settings_model.o fixtures.o
 test_nm_parse_OBJS := util.o nm_parse.o fixtures.o
 test_epub_OBJS := util.o epub.o zip.o config.o fixtures.o
+test_fb2_OBJS := util.o fb2.o zip.o config.o fixtures.o
+test_mobi_OBJS := util.o mobi.o config.o fixtures.o
 test_ui_OBJS := util.o ui.o config.o
 test_recent_OBJS := util.o recent.o config.o stubs.o fixtures.o
 

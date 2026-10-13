@@ -7,8 +7,9 @@
 # What the grid shows
 #   - "Continue reading": the most recently opened book across KOReader
 #     (history.lua), Plato (.metadata.json) and Kobo's reader (KoboReader.sqlite),
-#     with title, author, progress and the cover from the EPUB (cached under
-#     covers/). Tapping opens it in the app that last read it.
+#     with title, author, progress and the book's cover (EPUB, KEPUB, FB2,
+#     FB2.ZIP, MOBI, AZW, AZW3, PRC, CBZ; cached under covers/). Other formats,
+#     such as PDF, show a book icon. Tapping opens it in the app that last read it.
 #     nt_recent_source: auto (default) | koreader | plato | nickel.
 #     nt_recent_info: which of title, author, progress the caption shows.
 #     nt_recent_cover: 1 shows the book's cover (default), 0 a book icon.

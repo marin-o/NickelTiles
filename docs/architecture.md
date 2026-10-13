@@ -25,7 +25,9 @@ Each `.h` in `src/` documents its module; this is the map.
 | `nm_parse` | Reads NickelMenu's config files into entries |
 | `actions` | Runs NickelMenu actions and plain shell commands |
 | `recent` | The most recently read book across KOReader, Plato and Nickel, and opening it in the right app |
-| `zip`, `epub` | Reading EPUB covers with the zlib Nickel already loaded |
+| `zip` | Reading zip members with the zlib Nickel already loaded |
+| `epub`, `fb2`, `mobi`, `cbz` | Each finds the cover inside one book format |
+| `cover` | A book's cover in any of those formats, scaled and cached; adding a format is one line in its table |
 | `sleepcover` | Keeps the Continue reading cover in `.kobo/screensaver` |
 | `addons` | Finds and restores NickelHook add-ons a crash left switched off |
 | `pressable` | Touch handling shared by every tappable widget (Nickel sends only `QTouchEvent`s) |
