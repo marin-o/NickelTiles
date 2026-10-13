@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QStringList>
 
 #include <dlfcn.h>
@@ -87,17 +88,22 @@ void readKoreaderSidecar(const QString &file, NtRecentBook *book) {
     if (book->title.isEmpty()) book->title = file.mid(slash + 1, (hasExt ? dot : file.size()) - slash - 1);
 }
 
-// KOReader's most recent book, from history.lua (read once for both fields).
+// KOReader's most recent book that still exists, from history.lua, whose
+// entries ([1] = { ... }, newest first) each hold a file and a time.
 NtRecentBook koreaderBook() {
     NtRecentBook book;
     book.app = NtReaderApp::Koreader;
     const QString history = readText(QStringLiteral(NT_KOREADER_HISTORY));
-    book.lastRead = luaBareValue(history, "time", 20).toLongLong();
-    const QString file = luaString(history, "file");
-    if (file.isEmpty() || !QFile::exists(file)) return book;
-    book.path = file;
-    readKoreaderSidecar(file, &book);
-    book.valid = true;
+    const QStringList entries = history.split(QRegularExpression(QStringLiteral("\\[\\d+\\] = \\{")));
+    for (const QString &entry : entries) {
+        const QString file = luaString(entry, "file");
+        if (file.isEmpty() || !QFile::exists(file)) continue;
+        book.path = file;
+        book.lastRead = luaBareValue(entry, "time", 20).toLongLong();
+        readKoreaderSidecar(file, &book);
+        book.valid = true;
+        break;
+    }
     return book;
 }
 
@@ -126,7 +132,7 @@ int platoPercent(const QJsonObject &state) {
 // Plato keeps its library index at the root of onboard: .metadata.json, one
 // object per book with "file": {"path": ...}. Per-book state is in
 // .reading-states/<fingerprint>.json, where <fingerprint> is the book's key in
-// the index. The newest opened state wins.
+// the index. The newest opened state of a book that still exists wins.
 NtRecentBook platoBook() {
     NtRecentBook book;
     book.app = NtReaderApp::Plato;
@@ -151,13 +157,15 @@ NtRecentBook platoBook() {
             NT_DBG("recent (plato): state %s has no index entry", qPrintable(key));
             continue;
         }
+        const QString path = QStringLiteral(NT_ONBOARD "/") +
+                             entry.value(QStringLiteral("file")).toObject().value(QStringLiteral("path")).toString();
+        if (!QFile::exists(path)) continue;
         book.lastRead = opened;
-        book.path = QStringLiteral(NT_ONBOARD "/") +
-                    entry.value(QStringLiteral("file")).toObject().value(QStringLiteral("path")).toString();
+        book.path = path;
         book.title = entry.value(QStringLiteral("title")).toString();
         book.author = entry.value(QStringLiteral("author")).toString();
         book.percent = platoPercent(state);
-        book.valid = QFile::exists(book.path);
+        book.valid = true;
         if (book.title.isEmpty()) book.title = book.path.section(QLatin1Char('/'), -1).section(QLatin1Char('.'), 0, -2);
     }
     return book;
