@@ -63,7 +63,7 @@ request of their own.
 ## Automated tests
 
 `tests/` holds host tests (Qt Test) for the logic that does not need a
-reader: settings and config files, NickelMenu parsing, EPUB covers, recent
+reader: settings and config files, NickelMenu parsing, book covers, recent
 books, word wrap and grid sizes. They run on every push and pull request
 (the Tests workflow), and locally on a Linux machine with Qt 5 development
 packages:
