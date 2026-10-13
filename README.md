@@ -143,8 +143,10 @@ relies on.
 
 ## Notes
 
-- *Rescan books* actions are refused on purpose: on the development device a
-  library rescan deleted sideloaded books.
+- A NickelMenu entry that rescans the library won't run from a tile;
+  NickelTiles refuses it on purpose, because on the development device a
+  rescan deleted sideloaded books. The same entry still works from
+  NickelMenu's own menu.
 - Plato books open Plato itself, not the book (Plato has no open-at-launch
   option).
 
