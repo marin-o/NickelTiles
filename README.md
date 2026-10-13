@@ -36,7 +36,8 @@ NickelHome.
 Early. Developed and tested on one reader: a Tolino Shine 5 (T302, Clara BW
 hardware) running Kobo's Clara BW firmware **4.45.23697**. Other recent
 firmware (4.23.15505 and later, which share the home screen layout) may work
-but is untested. Reports welcome, even "it works".
+but is untested. Reports welcome, even "it works", here or in the
+[MobileRead thread](https://www.mobileread.com/forums/showthread.php?p=4615824#post4615824).
 
 NickelHook's failsafe applies: if Nickel crashes within 3 seconds of the mod
 loading, the mod disables itself (its library is renamed to
