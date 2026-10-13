@@ -8,6 +8,8 @@
 
 #include <QString>
 
+#include <functional>
+
 #include <NickelHook.h>
 
 extern struct nh_dlsym nt_nickel_dlsym[];
@@ -17,6 +19,12 @@ void nt_nickel_log_symbols();
 
 // Shows a Nickel toast; logs the text instead when toasts are unavailable.
 void nt_toast(const QString &text, int ms = 1500);
+
+// Nickel's two-button dialog (the one "Computer detected" uses). `onAccept`
+// runs if the accept button is tapped; the reject button just closes it.
+// Returns false, showing nothing, when the dialog is missing on this firmware.
+bool nt_confirm(const QString &title, const QString &text, const QString &acceptText, const QString &rejectText,
+                const std::function<void()> &onAccept);
 
 bool nt_power_off();
 bool nt_reboot();
