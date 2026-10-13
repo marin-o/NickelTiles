@@ -1,8 +1,8 @@
-#include "ui.h"
+#include "ui/ui.h"
 
 #include <QTimer>
 
-#include "util.h"
+#include "core/util.h"
 
 QFont nt_font(const QWidget *w, int px, bool bold) {
     QFont f = w->font();

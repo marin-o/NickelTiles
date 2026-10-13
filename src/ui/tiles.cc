@@ -1,4 +1,4 @@
-#include "tiles.h"
+#include "ui/tiles.h"
 
 #include <QColor>
 #include <QFontMetrics>
@@ -12,11 +12,11 @@
 
 #include <utility>
 
-#include "config.h"
-#include "cover.h"
-#include "paths.h"
-#include "ui.h"
-#include "util.h"
+#include "core/config.h"
+#include "books/cover.h"
+#include "core/paths.h"
+#include "ui/ui.h"
+#include "core/util.h"
 
 namespace {
 

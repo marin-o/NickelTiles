@@ -1,11 +1,11 @@
-#include "addons.h"
+#include "kobo/addons.h"
 
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
 
-#include "paths.h"
-#include "util.h"
+#include "core/paths.h"
+#include "core/util.h"
 
 namespace {
 

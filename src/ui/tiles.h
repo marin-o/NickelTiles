@@ -11,10 +11,10 @@
 #include <QString>
 #include <QStringList>
 
-#include "actions.h"
-#include "pressable.h"
-#include "recent.h"
-#include "settings_model.h"
+#include "kobo/actions.h"
+#include "ui/pressable.h"
+#include "books/recent.h"
+#include "core/settings_model.h"
 
 class NtTile;
 

@@ -7,11 +7,11 @@ HERE=$(cd "$(dirname "$0")/.." && pwd)
 BASE=${NICKELTC_BASE:?set NICKELTC_BASE to your NickelTC directory (the one holding tc/)}
 NM=$BASE/tc/arm-nickel-linux-gnueabihf/bin/arm-nickel-linux-gnueabihf-nm
 LIBNICKEL=${LIBNICKEL:-$BASE/libnickel.so.1.0.0}
-SO=$HERE/src/libnickeltiles.so
+SO=$HERE/build/libnickeltiles.so
 rc=0
 
 echo "== hooked libnickel symbols (from source)"
-grep -ohE '"_Z[A-Za-z0-9_]+"' "$HERE"/src/*.cc | tr -d '"' | sort -u > /tmp/nt-hooked.txt
+grep -rohE --include='*.cc' '"_Z[A-Za-z0-9_]+"' "$HERE"/src | tr -d '"' | sort -u > /tmp/nt-hooked.txt
 $NM -D --defined-only "$LIBNICKEL" | awk '{print $3}' | sort -u > /tmp/nt-libnickel.txt
 while read -r sym; do
   if grep -qx "$sym" /tmp/nt-libnickel.txt; then echo "ok      $sym"; else echo "MISSING $sym"; rc=1; fi

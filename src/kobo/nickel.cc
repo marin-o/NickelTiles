@@ -1,4 +1,4 @@
-#include "nickel.h"
+#include "kobo/nickel.h"
 
 #include <QByteArray>
 #include <QCoreApplication>
@@ -10,7 +10,7 @@
 
 #include <NickelHook.h>
 
-#include "util.h"
+#include "core/util.h"
 
 // libnickel symbols, resolved by NickelHook. Each is optional: a missing
 // symbol makes the wrappers below report failure instead of calling it.

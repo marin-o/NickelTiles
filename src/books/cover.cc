@@ -1,4 +1,4 @@
-#include "cover.h"
+#include "books/cover.h"
 
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -7,11 +7,11 @@
 #include <QFileInfo>
 #include <QImage>
 
-#include "cbz.h"
-#include "epub.h"
-#include "fb2.h"
-#include "mobi.h"
-#include "util.h"
+#include "books/cbz.h"
+#include "books/epub.h"
+#include "books/fb2.h"
+#include "books/mobi.h"
+#include "core/util.h"
 
 namespace {
 

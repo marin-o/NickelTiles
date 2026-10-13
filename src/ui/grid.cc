@@ -1,4 +1,4 @@
-#include "grid.h"
+#include "ui/grid.h"
 
 #include <QDateTime>
 #include <QGridLayout>
@@ -16,14 +16,14 @@
 #include <QVariant>
 #include <QWidget>
 
-#include "config.h"
-#include "nickel.h"
-#include "nm_parse.h"
-#include "settings_model.h"
-#include "settings_page.h"
-#include "tiles.h"
-#include "ui.h"
-#include "util.h"
+#include "core/config.h"
+#include "kobo/nickel.h"
+#include "kobo/nm_parse.h"
+#include "core/settings_model.h"
+#include "ui/settings_page.h"
+#include "ui/tiles.h"
+#include "ui/ui.h"
+#include "core/util.h"
 
 namespace {
 

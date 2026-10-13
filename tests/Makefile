@@ -19,6 +19,9 @@ TEST_DEFS := -DNT_CONFIG_DIR='"/tmp/nt-tests/config"' \
 	-DNH_VERSION='"test"'
 
 OBJ := build
+# The modules live in src/<group>/; objects are named after the file alone.
+vpath %.cc ../src/core ../src/kobo ../src/books ../src/ui
+vpath %.c ../src/core
 TESTS := test_layout test_config test_nm_parse test_epub test_fb2 test_mobi test_ui test_recent
 
 CFLAGS_ALL := -fPIC -Wall -Wextra -I../src -Istubs -I$(OBJ) $(TEST_DEFS)
@@ -58,10 +61,10 @@ $(OBJ)/fixtures.o: fixtures.cc fixtures.h | $(OBJ)
 $(OBJ)/stubs.o: stubs/stubs.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
-$(OBJ)/%.o: ../src/%.cc | $(OBJ)
+$(OBJ)/%.o: %.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
-$(OBJ)/%.o: ../src/%.c | $(OBJ)
+$(OBJ)/%.o: %.c | $(OBJ)
 	$(CC) $(CFLAGS_ALL) -c $< -o $@
 
 $(OBJ):

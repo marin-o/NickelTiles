@@ -1,4 +1,4 @@
-#include "settings_page.h"
+#include "ui/settings_page.h"
 
 #include <QBoxLayout>
 #include <QBrush>
@@ -18,13 +18,13 @@
 
 #include <utility>
 
-#include "addons.h"
-#include "grid.h"
-#include "nickel.h"
-#include "pressable.h"
-#include "settings_model.h"
-#include "ui.h"
-#include "util.h"
+#include "kobo/addons.h"
+#include "ui/grid.h"
+#include "kobo/nickel.h"
+#include "ui/pressable.h"
+#include "core/settings_model.h"
+#include "ui/ui.h"
+#include "core/util.h"
 
 namespace {
 

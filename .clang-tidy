@@ -47,7 +47,7 @@ Checks: >
   google-explicit-constructor,
   google-readability-casting
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*/src/[^/]*\.h$'
+HeaderFilterRegex: '.*/src/.*\.h$'
 CheckOptions:
   # Small functions: a function past this needs splitting, not a waiver.
   - key: readability-function-cognitive-complexity.Threshold

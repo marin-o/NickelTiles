@@ -1,4 +1,4 @@
-#include "sleepcover.h"
+#include "books/sleepcover.h"
 
 #include <QBuffer>
 #include <QByteArray>
@@ -11,10 +11,10 @@
 
 #include <unistd.h>
 
-#include "cover.h"
-#include "paths.h"
-#include "recent.h"
-#include "util.h"
+#include "books/cover.h"
+#include "core/paths.h"
+#include "books/recent.h"
+#include "core/util.h"
 
 namespace {
 

@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define nh_symoutptr(sym) (void**)(&sym)
+#define nh_symoutptr(sym) (void **)(&sym)
 
 struct nh_dlsym {
     const char *name;

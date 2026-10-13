@@ -1,11 +1,11 @@
-#include "epub.h"
+#include "books/epub.h"
 
 #include <QFile>
 #include <QRegularExpression>
 #include <QStringList>
 
-#include "util.h"
-#include "zip.h"
+#include "core/util.h"
+#include "books/zip.h"
 
 bool nt_is_epub(const QString &path) {
     const QString lower = path.toLower();

@@ -1,9 +1,9 @@
-#include "mobi.h"
+#include "books/mobi.h"
 
 #include <QFile>
 #include <QList>
 
-#include "util.h"
+#include "core/util.h"
 
 bool nt_is_mobi(const QString &path) {
     const QString lower = path.toLower();

@@ -8,7 +8,7 @@
 // every app. If the owner keeps their own pictures in that folder, NickelTiles
 // stays out of it.
 
-#include "settings_model.h"
+#include "core/settings_model.h"
 
 // Called as the sleep screen is built: writes the current book's cover (only
 // when the book changed), or removes the image when the feature is off or

@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "config.h"
-#include "util.h"
+#include "core/config.h"
+#include "core/util.h"
 
 static nt_entry_t *entries = NULL, *entries_tail = NULL;
 static nt_tile_t *tiles = NULL, *tiles_tail = NULL;

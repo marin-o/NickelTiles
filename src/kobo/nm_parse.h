@@ -6,7 +6,7 @@
 
 #include <QList>
 
-#include "actions.h"
+#include "kobo/actions.h"
 
 // Parses every file in `dir` except doc, uninstall and dot files.
 QList<NtEntry> nt_read_nickelmenu_entries(const QString &dir);

@@ -4,9 +4,9 @@
 
 #include <QFile>
 
-#include "config.h"
+#include "core/config.h"
 #include "fixtures.h"
-#include "settings_model.h"
+#include "core/settings_model.h"
 
 namespace {
 

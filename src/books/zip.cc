@@ -1,11 +1,11 @@
-#include "zip.h"
+#include "books/zip.h"
 
 #include <QtGlobal>
 
 #include <dlfcn.h>
 #include <cstring>
 
-#include "util.h"
+#include "core/util.h"
 
 // zlib's entry points, looked up at run time: Nickel already has libz loaded,
 // so the mod borrows it and never links against it.

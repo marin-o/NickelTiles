@@ -6,8 +6,8 @@
 #include <QDateTime>
 
 #include "fixtures.h"
-#include "paths.h"
-#include "recent.h"
+#include "core/paths.h"
+#include "books/recent.h"
 
 namespace {
 

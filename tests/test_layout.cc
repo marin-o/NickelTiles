@@ -2,7 +2,7 @@
 
 #include <QtTest>
 
-#include "layout.h"
+#include "ui/layout.h"
 
 class TestLayout : public QObject {
     Q_OBJECT
