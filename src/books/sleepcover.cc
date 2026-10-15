@@ -138,6 +138,10 @@ void updateSleepCover(NtRecentSource source) {
 
 }   // namespace
 
+void nt_sleep_cover_remove() {
+    clearSleepCover();
+}
+
 void nt_sleep_cover_refresh(const NtSettings &settings) {
     if (!settings.enabled || !settings.sleepCover)
         clearSleepCover();
