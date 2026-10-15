@@ -111,7 +111,8 @@ again (KPM or `KoboRoot.tgz`).
 
 Through KPM, or create an empty file named `uninstall` in
 `.adds/nickel-tiles/` and reboot (deleting the folder works too). The mod
-removes its library on the next start.
+removes its library and its sleep screen image (`.kobo/screensaver/nt-recent.*`)
+on the next start; the settings folder stays unless you deleted it.
 
 ## Build
 
