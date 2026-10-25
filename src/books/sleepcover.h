@@ -15,4 +15,8 @@
 // there is no EPUB cover.
 void nt_sleep_cover_refresh(const NtSettings &settings);
 
+// Removes NickelTiles' image from .kobo/screensaver; called when the mod is
+// uninstalled, so the sleep screen does not keep showing the last book.
+void nt_sleep_cover_remove();
+
 #endif

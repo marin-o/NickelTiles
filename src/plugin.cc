@@ -31,6 +31,14 @@ static int nt_init() {
     return 0;
 }
 
+// Runs after NickelHook removes the library. Logs to syslog only: NT_LOG would
+// recreate the config folder, which deleting is one way to uninstall.
+static bool nt_uninstall() {
+    nt_sleep_cover_remove();
+    nh_log("NickelTiles: uninstalled; removed the sleep screen cover");
+    return true;
+}
+
 static struct nh_info NickelTiles = (struct nh_info){
     .name = "NickelTiles",
     .desc = "App grid on the Kobo home screen.",
@@ -68,7 +76,8 @@ static struct nh_hook NickelTilesHook[] = {
     {nullptr},
 };
 
-NickelHook(.init = &nt_init, .info = &NickelTiles, .hook = NickelTilesHook, .dlsym = nt_nickel_dlsym, )
+NickelHook(.init = &nt_init, .info = &NickelTiles, .hook = NickelTilesHook, .dlsym = nt_nickel_dlsym,
+           .uninstall = &nt_uninstall, )
 
     // Called from the home page's setupUi, once the widget tree exists.
     extern "C" __attribute__((visibility("default"))) void _nt_setupui_hook(Ui_HomePageView *self, HomePageView *view) {
