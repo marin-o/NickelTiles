@@ -138,10 +138,13 @@ void updateSleepCover(NtRecentSource source) {
 
 }   // namespace
 
-QString nt_sleep_cover_content_id(const NtSettings &settings) {
-    if (!settings.enabled || !settings.sleepCover) return QString();
-    const NtRecentBook book = nt_recent_book(settings.recentSource);
-    return book.valid ? QStringLiteral("file://") + book.path : QString();
+void nt_sleep_cover_choose_book(const NtSettings &settings, const NtVolume *kobosBook,
+                                const std::function<void(const NtVolume *book)> &use) {
+    if (!nt_volume_is_valid(kobosBook) && settings.enabled && settings.sleepCover) {
+        const NtRecentBook book = nt_recent_book(settings.recentSource);
+        if (book.valid && nt_with_library_book(QStringLiteral("file://") + book.path, use)) return;
+    }
+    use(kobosBook);
 }
 
 void nt_sleep_cover_remove() {

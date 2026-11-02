@@ -13,11 +13,11 @@ typedef void Ui_HomePageView;
 typedef void PowerViewController;
 static void (*Ui_HomePageView_setupUi)(Ui_HomePageView *self, HomePageView *view);
 static void (*PowerViewController_updateCover)(PowerViewController *self);
-static void (*PowerViewController_setVolume)(PowerViewController *self, const void *volume);
+static void (*PowerViewController_setVolume)(PowerViewController *self, const NtVolume *volume);
 extern "C" __attribute__((visibility("default"))) void _nt_setupui_hook(Ui_HomePageView *self, HomePageView *view);
 extern "C" __attribute__((visibility("default"))) void _nt_updatecover_hook(PowerViewController *self);
 extern "C" __attribute__((visibility("default"))) void _nt_setvolume_hook(PowerViewController *self,
-                                                                          const void *volume);
+                                                                          const NtVolume *volume);
 
 static int nt_init() {
     nt_addons_mark_start();
@@ -110,9 +110,7 @@ extern "C" __attribute__((visibility("default"))) void _nt_updatecover_hook(Powe
 }
 
 extern "C" __attribute__((visibility("default"))) void _nt_setvolume_hook(PowerViewController *self,
-                                                                          const void *volume) {
-    const auto giveToSleepScreen = [self](const void *book) { PowerViewController_setVolume(self, book); };
-    if (nt_volume_is_valid(volume) ||
-        !nt_with_library_book(nt_sleep_cover_content_id(nt_settings()), giveToSleepScreen))
-        PowerViewController_setVolume(self, volume);
+                                                                          const NtVolume *volume) {
+    nt_sleep_cover_choose_book(nt_settings(), volume,
+                               [self](const NtVolume *book) { PowerViewController_setVolume(self, book); });
 }

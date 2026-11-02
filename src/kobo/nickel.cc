@@ -260,11 +260,11 @@ static bool lookupSymbolsAvailable() {
     return false;
 }
 
-bool nt_volume_is_valid(const void *volume) {
+bool nt_volume_is_valid(const NtVolume *volume) {
     return Volume_isValid && Volume_isValid(volume);
 }
 
-bool nt_with_library_book(const QString &contentId, const std::function<void(const void *volume)> &use) {
+bool nt_with_library_book(const QString &contentId, const std::function<void(const NtVolume *volume)> &use) {
     if (contentId.isEmpty() || !lookupSymbolsAvailable()) return false;
     Device *dev = Device_getCurrentDevice();
     if (!dev) {
@@ -280,7 +280,7 @@ bool nt_with_library_book(const QString &contentId, const std::function<void(con
     VolumeManager_getByIdBytes(volume, idBytes, dbName);
     const bool valid = Volume_isValid(volume);
     NT_LOG("book lookup: db='%s' id='%s' valid=%d", qPrintable(dbName), idBytes.constData(), valid ? 1 : 0);
-    if (valid) use(volume);
+    if (valid) use(reinterpret_cast<const NtVolume *>(volume));
     Volume_dtor(volume);
     return valid;
 }
@@ -288,7 +288,7 @@ bool nt_with_library_book(const QString &contentId, const std::function<void(con
 // Selects the book in `volume` the way a library tap does. The proxy is parented
 // to the application so the home page's destruction while the reader opens
 // cannot delete it mid-flight.
-static void selectBook(const void *volume) {
+static void selectBook(const NtVolume *volume) {
     // ReadBookActionProxy is 52 bytes on 4.45.23697 (ActionProxyMixin::readBookProxy);
     // allocate generously.
     void *proxy = std::calloc(1, 256);
