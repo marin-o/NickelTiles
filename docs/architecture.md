@@ -10,6 +10,7 @@ plain Qt 5.2 widgets added to Nickel's home page.
 | --- | --- | --- |
 | `Ui_HomePageView::setupUi` | Builds the home page; the grid is inserted right after. NickelHome hooks `HomePageView`'s constructor and NickelHook does not chain two mods on one symbol, so this one is used instead. | `plugin.cc` → `nt_install_grid` |
 | `PowerViewController::updateCover` (optional) | Picks the sleep screen image; the Continue reading cover is written just before. | `plugin.cc` → `nt_sleep_cover_refresh` |
+| `PowerViewController::setVolume` (optional) | Receives Nickel's latest book as the sleep screen is shown. When it is empty (nothing read in Nickel), the Continue reading book goes in its place, so the cover screen is still chosen. | `plugin.cc` → `nt_sleep_cover_content_id`, `nt_with_library_book` |
 
 ## Modules
 

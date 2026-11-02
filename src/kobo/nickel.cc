@@ -250,34 +250,25 @@ bool nt_go_home() {
     return true;
 }
 
-static bool openSymbolsAvailable() {
-    if (Device_getCurrentDevice && Device_getDbName && VolumeManager_getByIdBytes && Volume_isValid && Volume_dtor &&
-        ReadBookActionProxy_ctor && ReadBookActionProxy_onSelected)
+static bool lookupSymbolsAvailable() {
+    if (Device_getCurrentDevice && Device_getDbName && VolumeManager_getByIdBytes && Volume_isValid && Volume_dtor)
         return true;
-    NT_LOG("open in nickel: symbols missing (dev=%p db=%p byId=%p valid=%p dtor=%p proxy=%p sel=%p)",
+    NT_LOG("book lookup: symbols missing (dev=%p db=%p byId=%p valid=%p dtor=%p)",
            reinterpret_cast<void *>(Device_getCurrentDevice), reinterpret_cast<void *>(Device_getDbName),
            reinterpret_cast<void *>(VolumeManager_getByIdBytes), reinterpret_cast<void *>(Volume_isValid),
-           reinterpret_cast<void *>(Volume_dtor), reinterpret_cast<void *>(ReadBookActionProxy_ctor),
-           reinterpret_cast<void *>(ReadBookActionProxy_onSelected));
+           reinterpret_cast<void *>(Volume_dtor));
     return false;
 }
 
-// Selects the book in `volume` the way a library tap does. The proxy is parented
-// to the application so the home page's destruction while the reader opens
-// cannot delete it mid-flight.
-static void selectBook(Volume *volume) {
-    // ReadBookActionProxy is 52 bytes on 4.45.23697 (ActionProxyMixin::readBookProxy);
-    // allocate generously.
-    void *proxy = std::calloc(1, 256);
-    ReadBookActionProxy_ctor(proxy, QCoreApplication::instance(), volume);
-    ReadBookActionProxy_onSelected(proxy);
+bool nt_volume_is_valid(const void *volume) {
+    return Volume_isValid && Volume_isValid(volume);
 }
 
-bool nt_open_in_nickel(const QString &contentId) {
-    if (contentId.isEmpty() || !openSymbolsAvailable()) return false;
+bool nt_with_library_book(const QString &contentId, const std::function<void(const void *volume)> &use) {
+    if (contentId.isEmpty() || !lookupSymbolsAvailable()) return false;
     Device *dev = Device_getCurrentDevice();
     if (!dev) {
-        NT_LOG("open in nickel: no current device");
+        NT_LOG("book lookup: no current device");
         return false;
     }
     QString dbName;
@@ -288,13 +279,30 @@ bool nt_open_in_nickel(const QString &contentId) {
     const QByteArray idBytes = contentId.toUtf8();
     VolumeManager_getByIdBytes(volume, idBytes, dbName);
     const bool valid = Volume_isValid(volume);
-    NT_LOG("open in nickel: db='%s' id='%s' valid=%d", qPrintable(dbName), idBytes.constData(), valid ? 1 : 0);
-    if (!valid) {
-        Volume_dtor(volume);
+    NT_LOG("book lookup: db='%s' id='%s' valid=%d", qPrintable(dbName), idBytes.constData(), valid ? 1 : 0);
+    if (valid) use(volume);
+    Volume_dtor(volume);
+    return valid;
+}
+
+// Selects the book in `volume` the way a library tap does. The proxy is parented
+// to the application so the home page's destruction while the reader opens
+// cannot delete it mid-flight.
+static void selectBook(const void *volume) {
+    // ReadBookActionProxy is 52 bytes on 4.45.23697 (ActionProxyMixin::readBookProxy);
+    // allocate generously.
+    void *proxy = std::calloc(1, 256);
+    ReadBookActionProxy_ctor(proxy, QCoreApplication::instance(), volume);
+    ReadBookActionProxy_onSelected(proxy);
+}
+
+bool nt_open_in_nickel(const QString &contentId) {
+    if (!ReadBookActionProxy_ctor || !ReadBookActionProxy_onSelected) {
+        NT_LOG("open in nickel: symbols missing (proxy=%p sel=%p)", reinterpret_cast<void *>(ReadBookActionProxy_ctor),
+               reinterpret_cast<void *>(ReadBookActionProxy_onSelected));
         return false;
     }
-    selectBook(volume);
-    Volume_dtor(volume);
-    NT_LOG("open in nickel: proxy selected");
-    return true;
+    const bool opened = nt_with_library_book(contentId, selectBook);
+    if (opened) NT_LOG("open in nickel: proxy selected");
+    return opened;
 }

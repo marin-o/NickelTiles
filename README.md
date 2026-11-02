@@ -89,8 +89,11 @@ case with spaces as `-` (e.g. `kpm-status.png`), 200x200 recommended.
 Kobo only uses a custom sleep image when **Settings > Energy saving and
 privacy > Show book covers full screen** is on. NickelTiles keeps the image as
 `.kobo/screensaver/nt-recent.<ext>` and refreshes it as the reader goes to
-sleep. If you keep your own pictures in that folder, NickelTiles stays out of
-it, so your sleep screens remain the ones you chose. Turn the feature off on
+sleep. This also works if you only read in another app: Kobo shows no cover
+when it has no book of its own, so NickelTiles gives it the Continue reading
+book, which must be in Kobo's library. If you keep your own pictures in that
+folder, NickelTiles stays out of it, so your sleep screens remain the ones you
+chose. Turn the feature off on
 the settings page (or `nt_sleep_cover:0`).
 
 ### Switched-off add-ons
