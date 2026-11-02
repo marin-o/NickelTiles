@@ -69,8 +69,11 @@ NickelMenu is optional; without it the grid has the built-in tiles and any
 
 ## Use
 
-The grid replaces Kobo's home rows. To keep Kobo's own home widgets under the
-tiles, turn off *Hide Kobo's home rows* in Tiles settings. Tiles size
+The grid replaces Kobo's home rows. To keep Kobo's own home widgets, turn off
+*Hide Kobo's home rows* in Tiles settings; the rows that don't fit with the
+tiles stay hidden, lowest first. Until there is
+something to show besides the settings tile (a NickelMenu entry or a recent
+book), Kobo's rows stay visible. Tiles size
 themselves to fill the screen's width; set a fixed size there if you prefer.
 
 | Action | What happens |

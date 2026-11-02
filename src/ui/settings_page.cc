@@ -455,7 +455,7 @@ private:
         h->addWidget(m_sleep);
 
         h = row(v, QStringLiteral("Hide Kobo's home rows"),
-                QStringLiteral("Off shows Kobo's own home widgets under the tiles"));
+                QStringLiteral("Off keeps as many of Kobo's home widgets as fit"));
         m_hideRows = toggle([this]() {
             m_state.hideRows = !m_state.hideRows;
             refresh();
