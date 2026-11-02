@@ -64,7 +64,10 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 | | `layout` | Tile size and grid fit arithmetic, shared by the grid and the settings page |
 | | `tiles` | The tile widgets |
 | | `grid` | The grid on the home page: building, arranging, inserting into Nickel's layout |
-| | `settings_page` | The on-device settings page |
+| | `settings_page` | The on-device settings page: layout and wiring |
+| | `settings_rules` | What the page's controls may do and produce; plain functions, no widgets |
+| | `settings_tile_list` | The page's paged list of tiles to show |
+| | `controls` | The page's button, check row, toggle and label |
 
 Dependencies point downwards: `ui/` uses `books/` and `kobo/`, which use
 `core/`. Widgets stay in `ui/`; the exceptions are `plugin.cc`, which receives

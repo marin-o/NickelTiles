@@ -1,259 +1,26 @@
 #include "ui/settings_page.h"
 
 #include <QBoxLayout>
-#include <QBrush>
-#include <QColor>
 #include <QEvent>
-#include <QGridLayout>
 #include <QLabel>
-#include <QList>
 #include <QPaintEvent>
 #include <QPainter>
-#include <QPen>
 #include <QPoint>
-#include <QPolygon>
-#include <QRect>
-#include <QSet>
 #include <QStringList>
 
 #include <utility>
 
-#include "kobo/addons.h"
-#include "ui/grid.h"
-#include "kobo/nickel.h"
-#include "ui/pressable.h"
 #include "core/settings_model.h"
-#include "ui/ui.h"
 #include "core/util.h"
+#include "kobo/addons.h"
+#include "kobo/nickel.h"
+#include "ui/controls.h"
+#include "ui/grid.h"
+#include "ui/settings_rules.h"
+#include "ui/settings_tile_list.h"
+#include "ui/ui.h"
 
 namespace {
-
-const int kTilesPerPage = 6;   // two columns of three
-
-// A tappable control. Kind Button: rounded box with centred text. Kind Check:
-// a check box followed by the text, left aligned (a row in the tile list).
-// Kind Toggle: a fixed-width pill reading On (filled) or Off (outlined).
-class NtControl : public NtPressable {
-public:
-    enum Kind { Button, Check, Toggle };
-
-    NtControl(QWidget *parent, Kind kind, const QString &text, std::function<void()> onTap)
-        : NtPressable(parent), m_kind(kind), m_text(text), m_onTap(std::move(onTap)), m_checked(false) {
-        if (kind == Toggle)
-            setFixedSize(150, 72);
-        else if (kind == Check)
-            setFixedHeight(76);
-        else
-            setFixedHeight(72);
-    }
-    void setText(const QString &text) {
-        m_text = text;
-        update();
-    }
-    void setChecked(bool checked) {
-        m_checked = checked;
-        update();
-    }
-
-protected:
-    void tapped() override {
-        if (m_onTap) m_onTap();
-    }
-
-    void paintEvent(QPaintEvent *) override {
-        QPainter p(this);
-        p.setRenderHint(QPainter::Antialiasing, true);
-        p.fillRect(rect(), Qt::white);
-        if (m_kind == Check)
-            paintCheck(p);
-        else
-            paintBox(p);
-    }
-
-private:
-    void paintCheck(QPainter &p) {
-        const int side = 44;
-        const QRect cb(6, (height() - side) / 2, side, side);
-        const QRect row = rect().adjusted(0, 4, 0, -4);
-        const bool pressed = isPressed();
-        if (pressed) p.fillRect(row, Qt::black);
-        const QColor fg = pressed ? Qt::white : Qt::black;
-        p.setPen(QPen(fg, 4));
-        p.setBrush(Qt::NoBrush);
-        p.drawRoundedRect(cb, 6, 6);
-        if (m_checked) {
-            p.setPen(QPen(fg, 7, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-            QPolygon tick;
-            tick << QPoint(cb.left() + 10, cb.center().y() + 1) << QPoint(cb.left() + 19, cb.bottom() - 10)
-                 << QPoint(cb.right() - 8, cb.top() + 10);
-            p.drawPolyline(tick);
-        }
-        p.setPen(fg);
-        p.setFont(nt_font(this, 28));
-        p.drawText(QRect(cb.right() + 18, 0, width() - cb.right() - 24, height()), Qt::AlignLeft | Qt::AlignVCenter,
-                   p.fontMetrics().elidedText(m_text, Qt::ElideRight, width() - cb.right() - 24));
-    }
-
-    void paintBox(QPainter &p) {
-        const QRect box = rect().adjusted(3, 3, -3, -3);
-        const bool enabled = isPressEnabled();
-        bool filled = isPressed();
-        QString text = m_text;
-        if (m_kind == Toggle) {
-            filled = m_checked != isPressed();
-            text = m_checked ? QStringLiteral("On") : QStringLiteral("Off");
-        }
-        // A disabled control is drawn dotted, so it is not mistaken for a filled one.
-        if (!enabled) {
-            p.setPen(QPen(Qt::black, 2, Qt::DotLine));
-            p.setBrush(Qt::NoBrush);
-        } else {
-            p.setPen(QPen(Qt::black, 4));
-            p.setBrush(filled ? QBrush(Qt::black) : QBrush(Qt::NoBrush));
-        }
-        p.drawRoundedRect(box, 16, 16);
-        p.setPen(filled && enabled ? Qt::white : Qt::black);
-        p.setFont(nt_font(this, 30, true));
-        p.drawText(box, Qt::AlignCenter, text);
-    }
-
-    Kind m_kind;
-    QString m_text;
-    std::function<void()> m_onTap;
-    bool m_checked;
-};
-
-NtControl *ntButton(QWidget *parent, const QString &text, int width, std::function<void()> onTap) {
-    NtControl *b = new NtControl(parent, NtControl::Button, text, std::move(onTap));
-    b->setFixedWidth(width);
-    return b;
-}
-
-QLabel *ntLabel(QWidget *parent, const QString &text, int px, bool bold = false) {
-    QLabel *l = new QLabel(text, parent);
-    l->setFont(nt_font(parent, px, bold));
-    l->setWordWrap(true);
-    return l;
-}
-
-// Display names, in the order the source button cycles through them.
-struct SourceName {
-    NtRecentSource source;
-    const char *name;
-};
-const SourceName kSources[] = {
-    {NtRecentSource::Any, "Any app"},
-    {NtRecentSource::Koreader, "KOReader"},
-    {NtRecentSource::Plato, "Plato"},
-    {NtRecentSource::Nickel, "Kobo reader"},
-};
-const int kSourceCount = sizeof(kSources) / sizeof(kSources[0]);
-
-int sourceIndex(NtRecentSource source) {
-    for (int i = 0; i < kSourceCount; i++)
-        if (kSources[i].source == source) return i;
-    return 0;
-}
-
-NtRecentSource nextSource(NtRecentSource source) {
-    return kSources[(sourceIndex(source) + 1) % kSourceCount].source;
-}
-
-// The paged "Tiles to show" list: one page of check rows at a time. A checked
-// row is a tile that is shown; the set of hidden labels is edited in place.
-class NtTileList {
-public:
-    NtTileList(QWidget *parent, const QStringList &labels, const QStringList &hidden)
-        : m_labels(labels), m_hidden(QSet<QString>::fromList(hidden)), m_page(0) {
-        m_title = ntLabel(parent, QStringLiteral("Tiles to show"), 32, true);
-        m_prev = ntButton(parent, QStringLiteral("‹"), 90, [this]() {
-            m_page--;
-            refresh();
-        });
-        m_pageLabel = ntLabel(parent, QString(), 26);
-        m_pageLabel->setAlignment(Qt::AlignCenter);
-        m_pageLabel->setFixedWidth(120);
-        m_next = ntButton(parent, QStringLiteral("›"), 90, [this]() {
-            m_page++;
-            refresh();
-        });
-        for (int i = 0; i < kTilesPerPage; i++)
-            m_checks << new NtControl(parent, NtControl::Check, QString(), [this, i]() { toggleTile(i); });
-    }
-
-    void addTo(QVBoxLayout *v) {
-        QHBoxLayout *listHead = new QHBoxLayout();
-        listHead->addWidget(m_title, 1);
-        listHead->addWidget(m_prev);
-        listHead->addWidget(m_pageLabel);
-        listHead->addWidget(m_next);
-        v->addLayout(listHead);
-
-        QGridLayout *grid = new QGridLayout();
-        grid->setHorizontalSpacing(24);
-        grid->setVerticalSpacing(4);
-        for (int i = 0; i < m_checks.size(); i++)
-            grid->addWidget(m_checks.at(i), i % (kTilesPerPage / 2), i / (kTilesPerPage / 2));
-        v->addLayout(grid);
-        v->addStretch(1);
-    }
-
-    void refresh() {
-        const int pages = m_labels.isEmpty() ? 1 : (m_labels.size() + kTilesPerPage - 1) / kTilesPerPage;
-        if (m_page >= pages) m_page = pages - 1;
-        if (m_page < 0) m_page = 0;
-        m_prev->setVisible(pages > 1);
-        m_next->setVisible(pages > 1);
-        m_pageLabel->setVisible(pages > 1);
-        m_prev->setPressEnabled(m_page > 0);
-        m_next->setPressEnabled(m_page + 1 < pages);
-        m_pageLabel->setText(QString::number(m_page + 1) + QStringLiteral(" / ") + QString::number(pages));
-        for (int i = 0; i < m_checks.size(); i++) {
-            const int index = m_page * kTilesPerPage + i;
-            NtControl *c = m_checks.at(i);
-            if (index < m_labels.size()) {
-                c->setText(m_labels.at(index));
-                c->setChecked(!m_hidden.contains(m_labels.at(index)));
-                c->setVisible(true);
-            } else {
-                c->setVisible(false);
-            }
-        }
-    }
-
-    // The hidden list in the order it is written. Hide: lines for tiles that
-    // are not listed now are kept (an entry that was removed may come back),
-    // in the order they had; then the listed tiles in list order.
-    QStringList hiddenAfter(const QStringList &initialHidden) const {
-        if (m_hidden == QSet<QString>::fromList(initialHidden)) return initialHidden;
-        QStringList out;
-        for (const QString &l : initialHidden)
-            if (!m_labels.contains(l)) out << l;
-        for (const QString &l : m_labels)
-            if (m_hidden.contains(l)) out << l;
-        return out;
-    }
-
-private:
-    // Flips the tile in slot `slot` of the current page.
-    void toggleTile(int slot) {
-        const int index = m_page * kTilesPerPage + slot;
-        if (index >= m_labels.size()) return;
-        const QString &l = m_labels.at(index);
-        if (m_hidden.contains(l))
-            m_hidden.remove(l);
-        else
-            m_hidden.insert(l);
-        refresh();
-    }
-
-    QStringList m_labels;
-    QSet<QString> m_hidden;
-    int m_page;
-    QLabel *m_title, *m_pageLabel;
-    NtControl *m_prev, *m_next;
-    QList<NtControl *> m_checks;
-};
 
 class NtSettingsView : public QWidget {
 public:
@@ -308,13 +75,8 @@ private:
         m_state = m_initial;
     }
 
-    bool fits(int columns, int px) const { return nt_tiles_fit(columns, px, nt_grid_width()); }
-
-    // The fixed size `step` px away from the current one; leaving automatic
-    // starts from the size automatic gives now.
     void stepTileSize(int step) {
-        const int current = nt_tile_size(m_state.columns, m_state.tilePx, nt_grid_width());
-        m_state.tilePx = qBound(kNtTileMinPx, (current + step) / 20 * 20, kNtTileMaxPx);
+        m_state.tilePx = nt_stepped_tile_size(m_state, step, nt_grid_width());
         refresh();
     }
 
@@ -435,7 +197,7 @@ private:
 
         h = row(v, QStringLiteral("Most recent book from"));
         m_source = ntButton(this, QString(), 314, [this]() {
-            m_state.recentSource = nextSource(m_state.recentSource);
+            m_state.recentSource = nt_next_source(m_state.recentSource);
             refresh();
         });
         h->addWidget(m_source);
@@ -510,17 +272,17 @@ private:
     }
 
     void refresh() {
-        if (m_state.columns < 2) m_state.columns = 2;
-        const int px = nt_tile_size(m_state.columns, m_state.tilePx, nt_grid_width());
+        if (m_state.columns < kNtMinColumns) m_state.columns = kNtMinColumns;
+        const NtSizeLimits limits = nt_size_limits(m_state, nt_grid_width());
         m_colsValue->setText(QString::number(m_state.columns));
-        m_pxValue->setText(m_state.tilePx > 0 ? QString::number(px) : QStringLiteral("Auto"));
+        m_pxValue->setText(m_state.tilePx > 0 ? QString::number(limits.tilePx) : QStringLiteral("Auto"));
         m_pxAuto->setPressEnabled(m_state.tilePx > 0);
-        m_colsDown->setPressEnabled(m_state.columns > 2);
-        m_colsUp->setPressEnabled(fits(m_state.columns + 1, m_state.tilePx));
-        m_pxDown->setPressEnabled(px > kNtTileMinPx);
-        m_pxUp->setPressEnabled(px < kNtTileMaxPx && fits(m_state.columns, px + 20));
+        m_colsDown->setPressEnabled(limits.canRemoveColumn);
+        m_colsUp->setPressEnabled(limits.canAddColumn);
+        m_pxDown->setPressEnabled(limits.canShrinkTile);
+        m_pxUp->setPressEnabled(limits.canGrowTile);
         m_recent->setChecked(m_state.recent);
-        m_source->setText(QString::fromUtf8(kSources[sourceIndex(m_state.recentSource)].name));
+        m_source->setText(nt_source_name(m_state.recentSource));
         m_source->setPressEnabled(m_state.recent);
         m_infoCover->setChecked(m_state.recentCover);
         m_infoTitle->setChecked(m_state.recentInfo.title);
