@@ -16,6 +16,7 @@
 #include <QVariant>
 #include <QWidget>
 
+#include "books/recent.h"
 #include "core/config.h"
 #include "kobo/nickel.h"
 #include "kobo/nm_parse.h"
@@ -33,6 +34,16 @@ bool nt_claim_label(const QString &label, const QStringList &hidden, QStringList
     if (seen->contains(label) || hidden.contains(label)) return false;
     *seen << label;
     return true;
+}
+
+// Whether the grid will hold anything beyond the settings tile. With only that
+// tile, a first install would look broken if Kobo's rows were hidden too.
+bool nt_has_app_tiles(const NtSettings &settings) {
+    for (const NtEntry &e : nt_nickelmenu_entries())
+        if (!settings.hidden.contains(e.label)) return true;
+    for (const nt_tile_t *t = nt_config_tiles(); t; t = t->next)
+        if (!settings.hidden.contains(QString::fromUtf8(t->label))) return true;
+    return settings.recent && nt_recent_book(settings.recentSource).valid;
 }
 
 // The stretch nt_install_grid adds below the rows when they are hidden, kept
@@ -92,14 +103,36 @@ bool nt_remove_previous_grid(QWidget *container, QVBoxLayout *mainLayout) {
 
 // Hides Kobo's rows when asked. Rows are only shown again if this mod hid
 // them, since another mod may have hidden some.
+void nt_hide_row(QWidget *row) {
+    row->setProperty("ntHidden", true);
+    row->setVisible(false);
+}
+
+// Tiles have a fixed height, so when Kobo's rows and the grid together need
+// more than the page has, the layout would overlap the tiles. Hides Kobo's
+// rows, lowest first, until everything fits. Rows are empty until the page is
+// laid out and filled, so this runs as the grid is shown and again afterwards.
+void nt_fit_kept_rows(QWidget *container) {
+    QLayout *layout = container->layout();
+    static const char *const lowestFirst[] = {"row3", "row2", "row1"};
+    for (const char *name : lowestFirst) {
+        layout->invalidate();
+        if (layout->minimumSize().height() <= container->height()) return;
+        QWidget *r = nt_find_direct_child(container, name);
+        if (r && !r->isHidden()) {
+            nt_hide_row(r);
+            NT_LOG("hid Kobo's %s: not enough room for it and the tiles", name);
+        }
+    }
+}
+
 void nt_set_rows_hidden(QWidget *container, bool hideRows) {
     static const char *const rows[] = {"row1", "row2", "row3"};
     for (const char *name : rows) {
         QWidget *r = nt_find_direct_child(container, name);
         if (!r) continue;
         if (hideRows && !r->isHidden()) {
-            r->setProperty("ntHidden", true);
-            r->setVisible(false);
+            nt_hide_row(r);
         } else if (!hideRows && r->property("ntHidden").toBool()) {
             r->setProperty("ntHidden", QVariant());
             r->setVisible(true);
@@ -115,6 +148,7 @@ class NtGrid : public QWidget, public NtTileHost {
 public:
     NtGrid(QWidget *homeView, QWidget *parent, const NtSettings &settings);
     void build();
+    void keepKoboRows() { m_keepsRows = true; }
 
     void tileTapped(NtTile *tile) override;
     void tileLongPressed(NtTile *tile) override;
@@ -122,6 +156,7 @@ public:
 protected:
     void showEvent(QShowEvent *event) override {
         QWidget::showEvent(event);
+        fitRows();
         if (m_recent) m_recent->refresh();
         startTimer(2000);   // Nickel updates its database and widgets shortly after
         // One file per screen visit (a later one may show a dialog on top).
@@ -131,10 +166,14 @@ protected:
     }
     void timerEvent(QTimerEvent *event) override {
         killTimer(event->timerId());
+        fitRows();
         if (m_recent) m_recent->refresh();
     }
 
 private:
+    void fitRows() {
+        if (m_keepsRows) nt_fit_kept_rows(parentWidget());
+    }
     void applyOrder();
     void relayout();
     void saveOrder();
@@ -145,6 +184,7 @@ private:
     QList<NtTile *> m_tiles;
     NtRecentTile *m_recent;
     NtTile *m_marked;
+    bool m_keepsRows = false;
 };
 
 NtGrid::NtGrid(QWidget *homeView, QWidget *parent, const NtSettings &settings)
@@ -267,19 +307,21 @@ void nt_install_grid(QWidget *homeView) {
     }
     const bool replacing = nt_remove_previous_grid(container, mainLayout);
     const NtSettings settings = nt_settings();
-    nt_set_rows_hidden(container, settings.hideRows);
+    const bool hideRows = settings.hideRows && nt_has_app_tiles(settings);
+    nt_set_rows_hidden(container, hideRows);
 
     NtGrid *grid = new NtGrid(homeView, container, settings);
     grid->build();
-    const int index = settings.hideRows ? 0 : 1;
+    if (!hideRows) grid->keepKoboRows();
+    const int index = hideRows ? 0 : 1;
     mainLayout->insertWidget(index, grid);
-    if (settings.hideRows) {
+    if (hideRows) {
         QSpacerItem *sp = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
         mainLayout->addItem(sp);
         nt_stretches().insert(mainLayout, sp);
     }
     if (replacing) grid->show();
-    NT_LOG("inserted grid at mainLayout index %d (rows hidden=%d)", index, settings.hideRows ? 1 : 0);
+    NT_LOG("inserted grid at mainLayout index %d (rows hidden=%d)", index, hideRows ? 1 : 0);
 }
 
 int nt_grid_width() {
