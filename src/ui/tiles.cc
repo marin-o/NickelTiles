@@ -14,6 +14,7 @@
 
 #include "core/config.h"
 #include "books/cover.h"
+#include "books/open_book.h"
 #include "core/paths.h"
 #include "ui/ui.h"
 #include "core/util.h"

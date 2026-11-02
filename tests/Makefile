@@ -25,8 +25,7 @@ CFLAGS_ALL := -fPIC -Wall -Wextra -I../src -Istubs -I$(OBJ) $(TEST_DEFS)
 CXXFLAGS_ALL := $(CFLAGS_ALL) -std=gnu++11 $(QT_CFLAGS) -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB
 LDLIBS := $(QT_LIBS) -ldl
 
-# The module objects each test links: only what it needs. recent.cc calls into
-# Nickel, so its test links stubs/ instead of nickel.cc and actions.cc.
+# The module objects each test links: only what it needs.
 test_layout_OBJS := layout.o
 test_config_OBJS := util.o config.o settings_model.o fixtures.o
 test_nm_parse_OBJS := util.o nm_parse.o fixtures.o
@@ -34,7 +33,7 @@ test_epub_OBJS := util.o epub.o zip.o config.o fixtures.o
 test_fb2_OBJS := util.o fb2.o zip.o config.o fixtures.o
 test_mobi_OBJS := util.o mobi.o config.o fixtures.o
 test_ui_OBJS := util.o ui.o config.o
-test_recent_OBJS := util.o recent.o config.o stubs.o fixtures.o
+test_recent_OBJS := util.o recent.o recent_koreader.o recent_plato.o recent_nickel.o config.o fixtures.o
 
 .SECONDEXPANSION:
 .PHONY: check clean
@@ -53,9 +52,6 @@ $(OBJ)/test_%.o: test_%.cc $(OBJ)/test_%.moc
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
 $(OBJ)/fixtures.o: fixtures.cc fixtures.h | $(OBJ)
-	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
-
-$(OBJ)/stubs.o: stubs/stubs.cc | $(OBJ)
 	$(CXX) $(CXXFLAGS_ALL) -c $< -o $@
 
 # The modules live in src/<folder>/; objects are named after the file alone.
