@@ -1,9 +1,8 @@
 #ifndef NT_RECENT_H
 #define NT_RECENT_H
 
-// The most recently read book across KOReader (history.lua and the book's
-// .sdr sidecar), Plato (.metadata.json and .reading-states) and Nickel
-// (KoboReader.sqlite, read through the sqlite3 already loaded in Nickel).
+// The most recently read book across KOReader, Plato and Nickel. How each app's
+// records are read is in books/recent_apps.h; opening a book is in books/open_book.h.
 
 #include <QString>
 
@@ -24,11 +23,6 @@ struct NtRecentBook {
 
 // The newest book from `source` (or from all three apps for Any).
 NtRecentBook nt_recent_book(NtRecentSource source);
-
-// Opens the book in the app that last read it: Nickel's reader (KOReader if
-// that fails), KOReader with the file, or Plato (which cannot be told which
-// book to open, so it starts on its own last book).
-void nt_open_recent_book(const NtRecentBook &book);
 
 const char *nt_reader_app_name(NtReaderApp app);
 

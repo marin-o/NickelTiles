@@ -17,7 +17,7 @@ plain Qt 5.2 widgets added to Nickel's home page.
 **Tapping a tile.** `NtPressable` turns touch events into a tap, and `NtTile::tapped`
 tells the grid (`NtGrid::tileTapped`). Unless a tile is marked for arranging, the
 grid calls that tile's `activate()`. For Continue reading that is
-`nt_open_recent_book` (`books/recent`): KOReader and Plato are launched through
+`nt_open_recent_book` (`books/open_book`): KOReader and Plato are launched through
 `kobo/actions`, Nickel books open through `nt_open_in_nickel` (`kobo/nickel`).
 
 **Showing the most recent book.** `NtRecentTile::refresh` calls `nt_recent_book`,
@@ -52,7 +52,9 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 | | `nm_parse` | Reads NickelMenu's config files into entries |
 | | `actions` | Runs NickelMenu actions and plain shell commands |
 | | `addons` | Finds and restores NickelHook add-ons a crash left switched off |
-| `books/` | `recent` | The most recently read book across KOReader, Plato and Nickel, and opening it in the right app |
+| `books/` | `recent` | The most recently read book across KOReader, Plato and Nickel |
+| | `recent_koreader`, `recent_plato`, `recent_nickel` | Each reads one app's records (declared in `recent_apps.h`) |
+| | `open_book` | Opens a book in the app that last read it |
 | | `zip` | Reading zip members with the zlib Nickel already loaded |
 | | `epub`, `fb2`, `mobi`, `cbz` | Each finds the cover inside one book format |
 | | `cover` | A book's cover in any of those formats, scaled and cached; adding a format is one line in its table |
