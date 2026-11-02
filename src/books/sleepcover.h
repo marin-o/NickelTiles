@@ -15,6 +15,12 @@
 // there is no EPUB cover.
 void nt_sleep_cover_refresh(const NtSettings &settings);
 
+// With no book read in Nickel, Nickel gives the sleep screen an empty book and
+// shows "Sleeping", never reaching the image above. This returns the ContentID
+// to give it instead: the Continue reading book, whichever app read it. Empty
+// when the feature is off or there is no recent book.
+QString nt_sleep_cover_content_id(const NtSettings &settings);
+
 // Removes NickelTiles' image from .kobo/screensaver; called when the mod is
 // uninstalled, so the sleep screen does not keep showing the last book.
 void nt_sleep_cover_remove();

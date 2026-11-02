@@ -138,6 +138,12 @@ void updateSleepCover(NtRecentSource source) {
 
 }   // namespace
 
+QString nt_sleep_cover_content_id(const NtSettings &settings) {
+    if (!settings.enabled || !settings.sleepCover) return QString();
+    const NtRecentBook book = nt_recent_book(settings.recentSource);
+    return book.valid ? QStringLiteral("file://") + book.path : QString();
+}
+
 void nt_sleep_cover_remove() {
     clearSleepCover();
 }

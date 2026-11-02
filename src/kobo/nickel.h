@@ -39,6 +39,14 @@ bool nt_wifi_set(NtWifiChange change);
 // Nickel's home screen (MainNavController::home).
 bool nt_go_home();
 
+// Whether a Nickel Volume refers to a real book; an empty one does not.
+bool nt_volume_is_valid(const void *volume);
+
+// Looks a book up in Nickel's library and calls `use` with its Volume, which is
+// valid only during the call. Reads the library, never changes it. Returns false
+// when the book is not in the library. `contentId` is as for nt_open_in_nickel.
+bool nt_with_library_book(const QString &contentId, const std::function<void(const void *volume)> &use);
+
 // Opens a library book in Nickel's reader the way tapping it in the library
 // does. `contentId` is the content table's ContentID ("file:///mnt/onboard/...").
 bool nt_open_in_nickel(const QString &contentId);

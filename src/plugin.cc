@@ -13,8 +13,11 @@ typedef void Ui_HomePageView;
 typedef void PowerViewController;
 static void (*Ui_HomePageView_setupUi)(Ui_HomePageView *self, HomePageView *view);
 static void (*PowerViewController_updateCover)(PowerViewController *self);
+static void (*PowerViewController_setVolume)(PowerViewController *self, const void *volume);
 extern "C" __attribute__((visibility("default"))) void _nt_setupui_hook(Ui_HomePageView *self, HomePageView *view);
 extern "C" __attribute__((visibility("default"))) void _nt_updatecover_hook(PowerViewController *self);
+extern "C" __attribute__((visibility("default"))) void _nt_setvolume_hook(PowerViewController *self,
+                                                                          const void *volume);
 
 static int nt_init() {
     nt_addons_mark_start();
@@ -73,6 +76,17 @@ static struct nh_hook NickelTilesHook[] = {
         .desc = "sleep screen cover of the most recent book",
         .optional = true,
     },   // libnickel 4.45.23697 * _ZN19PowerViewController11updateCoverEv
+    {
+        // Called through the PLT from N3PowerWorkflowManager::show with
+        // Nickel's latest book, when "Show book covers full screen" is on.
+        // loadView only reaches updateCover when that book is valid.
+        .sym = "_ZN19PowerViewController9setVolumeERK6Volume",
+        .sym_new = "_nt_setvolume_hook",
+        .lib = "libnickel.so.1.0.0",
+        .out = nh_symoutptr(PowerViewController_setVolume),
+        .desc = "sleep screen cover when no book was read in Nickel",
+        .optional = true,
+    },   // libnickel 4.45.23697 * _ZN19PowerViewController9setVolumeERK6Volume
     {nullptr},
 };
 
@@ -93,4 +107,12 @@ NickelHook(.init = &nt_init, .info = &NickelTiles, .hook = NickelTilesHook, .dls
 extern "C" __attribute__((visibility("default"))) void _nt_updatecover_hook(PowerViewController *self) {
     nt_sleep_cover_refresh(nt_settings());
     PowerViewController_updateCover(self);
+}
+
+extern "C" __attribute__((visibility("default"))) void _nt_setvolume_hook(PowerViewController *self,
+                                                                          const void *volume) {
+    const auto giveToSleepScreen = [self](const void *book) { PowerViewController_setVolume(self, book); };
+    if (nt_volume_is_valid(volume) ||
+        !nt_with_library_book(nt_sleep_cover_content_id(nt_settings()), giveToSleepScreen))
+        PowerViewController_setVolume(self, volume);
 }
