@@ -1,7 +1,7 @@
 # Architecture
 
 NickelTiles is a NickelHook plugin loaded into Nickel, Kobo's reading app. It
-hooks two libnickel functions and calls a handful of others; everything else is
+hooks three libnickel functions and calls a handful of others; everything else is
 plain Qt 5.2 widgets added to Nickel's home page.
 
 ## Hooks
@@ -12,6 +12,30 @@ plain Qt 5.2 widgets added to Nickel's home page.
 | `PowerViewController::updateCover` (optional) | Picks the sleep screen image; the Continue reading cover is written just before. | `plugin.cc` → `nt_sleep_cover_refresh` |
 | `PowerViewController::setVolume` (optional) | Receives Nickel's latest book as the sleep screen is shown. When it is empty (nothing read in Nickel), the Continue reading book goes in its place, so the cover screen is still chosen. | `plugin.cc` → `nt_sleep_cover_content_id`, `nt_with_library_book` |
 
+## How a feature works
+
+**Tapping a tile.** `NtPressable` turns touch events into a tap, and `NtTile::tapped`
+tells the grid (`NtGrid::tileTapped`). Unless a tile is marked for arranging, the
+grid calls that tile's `activate()`. For Continue reading that is
+`nt_open_recent_book` (`books/recent`): KOReader and Plato are launched through
+`kobo/actions`, Nickel books open through `nt_open_in_nickel` (`kobo/nickel`).
+
+**Showing the most recent book.** `NtRecentTile::refresh` calls `nt_recent_book`,
+which reads each app's records and keeps the newest. It runs when Home is shown
+and again shortly after, since apps and Nickel update their records late.
+
+**Going to sleep.** `N3PowerWorkflowManager::show` passes Kobo's latest book to
+`PowerViewController::setVolume`. If that book is empty, `_nt_setvolume_hook` passes
+the Continue reading book instead (decision 002). `loadView` then calls `updateCover`,
+and `_nt_updatecover_hook` runs `nt_sleep_cover_refresh` first, which keeps the cover
+in `.kobo/screensaver` for Kobo to display.
+
+**Building Home.** `_nt_setupui_hook` calls `nt_install_grid`, which decides whether
+Kobo's rows stay (decision 003), builds the tiles and inserts the grid. Saving in
+Tiles settings runs `nt_install_grid` again.
+
+Reasons behind the less obvious choices are in `docs/decisions/`.
+
 ## Modules
 
 Each `.h` documents its module; this is the map. Modules are grouped in
@@ -19,7 +43,7 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 
 | Folder | Module | Job |
 | --- | --- | --- |
-| `src/` | `plugin` | NickelHook registration, startup log, the two hook entry points |
+| `src/` | `plugin` | NickelHook registration, startup log, the hook entry points |
 | `core/` | `util` | Logging (`NT_LOG`, `NT_DBG`) and small string helpers, shared by C and C++ (C) |
 | | `config` | The raw `key:value` config file: parse, cache, atomic in-place writes (C) |
 | | `settings_model` | All settings as one `NtSettings` value with names and defaults in one place; load and save |
