@@ -1,6 +1,7 @@
 #!/bin/sh
-# Checks formatting (clang-format) and code (clang-tidy, rules in .clang-tidy)
-# of src/ and the formatting of tests/. Fails on any finding.
+# Checks the dependency rule (tools/check-deps.sh), formatting (clang-format) and
+# code (clang-tidy, rules in .clang-tidy) of src/ and the formatting of tests/.
+# Fails on any finding.
 #
 #   QT_INCLUDE   folder holding QtCore/, QtGui/, QtWidgets/ (required)
 #   LINT_FLAGS   extra compiler flags, e.g. a target and sysroot (optional)
@@ -19,6 +20,9 @@ CLANG_FORMAT=${CLANG_FORMAT:-clang-format}
 LINT_FLAGS=${LINT_FLAGS:-}
 
 status=0
+echo "== dependency rule"
+sh tools/check-deps.sh || status=1
+
 echo "== clang-format"
 # shellcheck disable=SC2046
 "$CLANG_FORMAT" --dry-run --Werror $(find src tests -name '*.h' -o -name '*.c' -o -name '*.cc') || status=1
