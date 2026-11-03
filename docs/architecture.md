@@ -64,6 +64,7 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 | | `layout` | Tile size and grid fit arithmetic, shared by the grid and the settings page |
 | | `tiles` | The tile widgets |
 | | `grid` | The grid on the home page: building, arranging, inserting into Nickel's layout |
+| | `grid_rules` | The grid's decisions, such as saved tile order; plain functions, no widgets |
 | | `settings_page` | The on-device settings page: layout and wiring |
 | | `settings_rules` | What the page's controls may do and produce; plain functions, no widgets |
 | | `settings_tile_list` | The page's paged list of tiles to show |

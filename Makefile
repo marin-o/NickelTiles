@@ -10,7 +10,7 @@ override SOURCES  += src/plugin.cc \
 	src/books/zip.cc src/books/epub.cc src/books/fb2.cc src/books/mobi.cc src/books/cbz.cc \
 	src/books/cover.cc src/books/recent.cc src/books/recent_koreader.cc src/books/recent_plato.cc \
 	src/books/recent_nickel.cc src/books/open_book.cc src/books/sleepcover.cc \
-	src/ui/ui.cc src/ui/pressable.cc src/ui/layout.cc src/ui/tiles.cc src/ui/grid.cc \
+	src/ui/ui.cc src/ui/pressable.cc src/ui/layout.cc src/ui/tiles.cc src/ui/grid.cc src/ui/grid_rules.cc \
 	src/ui/controls.cc src/ui/settings_rules.cc src/ui/settings_tile_list.cc src/ui/settings_page.cc
 override CFLAGS   += -Wall -Wextra -Werror -fvisibility=hidden
 override CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-field-initializers -fvisibility=hidden -fvisibility-inlines-hidden

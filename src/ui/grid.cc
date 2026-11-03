@@ -18,6 +18,7 @@
 
 #include "books/recent.h"
 #include "core/config.h"
+#include "ui/grid_rules.h"
 #include "kobo/nickel.h"
 #include "kobo/nm_parse.h"
 #include "core/settings_model.h"
@@ -39,11 +40,8 @@ bool nt_claim_label(const QString &label, const QStringList &hidden, QStringList
 // Whether the grid will hold anything beyond the settings tile. With only that
 // tile, a first install would look broken if Kobo's rows were hidden too.
 bool nt_has_app_tiles(const NtSettings &settings) {
-    for (const NtEntry &e : nt_nickelmenu_entries())
-        if (!settings.hidden.contains(e.label)) return true;
-    for (const nt_tile_t *t = nt_config_tiles(); t; t = t->next)
-        if (!settings.hidden.contains(QString::fromUtf8(t->label))) return true;
-    return settings.recent && nt_recent_book(settings.recentSource).valid;
+    return nt_any_tile_shown(nt_all_tile_labels(), settings.hidden) ||
+           (settings.recent && nt_recent_book(settings.recentSource).valid);
 }
 
 // The stretch nt_install_grid adds below the rows when they are hidden, kept
@@ -225,20 +223,11 @@ void NtGrid::build() {
     startTimer(1500);   // first refresh of the recent tile after Nickel fills row1
 }
 
-// Known labels first in the saved order, the rest after.
 void NtGrid::applyOrder() {
-    if (m_settings.order.isEmpty()) return;
+    QStringList labels;
+    for (const NtTile *tile : m_tiles) labels << tile->label();
     QList<NtTile *> sorted;
-    for (const QString &name : m_settings.order) {
-        const QString n = name.trimmed();
-        for (int i = 0; i < m_tiles.size(); i++) {
-            if (m_tiles.at(i)->label() == n) {
-                sorted << m_tiles.takeAt(i);
-                break;
-            }
-        }
-    }
-    sorted << m_tiles;
+    for (const int index : nt_tile_order(labels, m_settings.order)) sorted << m_tiles.at(index);
     m_tiles = sorted;
 }
 
