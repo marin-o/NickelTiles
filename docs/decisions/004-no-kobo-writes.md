@@ -11,8 +11,9 @@ the development reader, a library rescan deleted sideloaded books.
 
 ## Decision
 
-NickelTiles writes only inside `.adds/nickel-tiles/` and its own `nt-recent.*` in
-`.kobo/screensaver/`. It reads Kobo's database and uses Kobo's own functions for
+NickelTiles writes only inside `.adds/nickel-tiles/`, its own `nt-recent.*` in
+`.kobo/screensaver/`, and its own NickelMenu file `.adds/nm/nickel-tiles` once the
+user agrees (decision 006). It reads Kobo's database and uses Kobo's own functions for
 anything else, and it refuses to run NickelMenu's rescan action from a tile.
 
 ## Consequences

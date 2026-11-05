@@ -10,6 +10,10 @@
 
 enum class NtRecentSource { Any, Koreader, Plato, Nickel };
 
+// Which of Kobo's home rows stay. Kept rows share the first page with the tiles;
+// tiles that don't fit go on further pages, where Kobo's rows step aside.
+enum class NtKoboRows { Hidden, Top, All };
+
 struct NtRecentInfo {
     bool title = true;
     bool author = true;
@@ -20,11 +24,14 @@ struct NtRecentInfo {
     bool operator!=(const NtRecentInfo &o) const { return !(*this == o); }
 };
 
+const int kNtRecentCountMax = 10;
+
 struct NtSettings {
     bool enabled = true;                                 // nt_enabled: master switch
     bool actions = true;                                 // nt_actions: run tiles when tapped
-    bool hideRows = true;                                // nt_hide_rows: hide Kobo's own home rows
+    NtKoboRows koboRows = NtKoboRows::Hidden;            // nt_kobo_rows (older configs: nt_hide_rows)
     bool recent = true;                                  // nt_recent: Continue reading tile
+    int recentCount = 1;                                 // nt_recent_count: book tiles, 1 to kNtRecentCountMax
     NtRecentSource recentSource = NtRecentSource::Any;   // nt_recent_source
     NtRecentInfo recentInfo;                             // nt_recent_info: its caption
     bool recentCover = true;                             // nt_recent_cover: the book's cover, else a book icon

@@ -2,6 +2,10 @@
 
 #include "kobo/addons.h"
 #include "core/config.h"
+#include "core/crash_guard.h"
+#include "core/crash_log.h"
+#include "kobo/nm_entry.h"
+#include "ui/startup.h"
 #include "ui/grid.h"
 #include "kobo/nickel.h"
 #include "core/settings_model.h"
@@ -20,17 +24,19 @@ extern "C" __attribute__((visibility("default"))) void _nt_setvolume_hook(PowerV
                                                                           const NtVolume *volume);
 
 static int nt_init() {
+    nt_crash_log_install();
     nt_addons_mark_start();
     nt_config_get("");   // parse the config now, so a problem shows in the startup log
     NT_LOG("startup: NickelTiles " NH_VERSION);
     nt_log_firmware();
     const NtSettings s = nt_settings();
-    NT_LOG("startup: enabled=%d actions=%d hide_rows=%d recent=%d columns=%d tile_px=%d sleep_cover=%d verbose=%d "
+    NT_LOG("startup: enabled=%d actions=%d kobo_rows=%d recent=%d columns=%d tile_px=%d sleep_cover=%d verbose=%d "
            "hook=%p sleep_hook=%p",
-           s.enabled ? 1 : 0, s.actions ? 1 : 0, s.hideRows ? 1 : 0, s.recent ? 1 : 0, s.columns, s.tilePx,
+           s.enabled ? 1 : 0, s.actions ? 1 : 0, static_cast<int>(s.koboRows), s.recent ? 1 : 0, s.columns, s.tilePx,
            s.sleepCover ? 1 : 0, nt_log_verbose ? 1 : 0, reinterpret_cast<void *>(Ui_HomePageView_setupUi),
            reinterpret_cast<void *>(PowerViewController_updateCover));
     nt_nickel_log_symbols();
+    nt_crash_guard_start();
     return 0;
 }
 
@@ -38,7 +44,8 @@ static int nt_init() {
 // recreate the config folder, which deleting is one way to uninstall.
 static bool nt_uninstall() {
     nt_sleep_cover_remove();
-    nh_log("NickelTiles: uninstalled; removed the sleep screen cover");
+    nt_nm_entry_set(false);
+    nh_log("NickelTiles: uninstalled; removed the sleep screen cover and NickelMenu entry");
     return true;
 }
 
@@ -102,6 +109,7 @@ NickelHook(.init = &nt_init, .info = &NickelTiles, .hook = NickelTilesHook, .dls
         nt_install_grid(view);
     else
         NT_DBG("nt_enabled=0 or no view; leaving the home screen untouched");
+    if (view) nt_startup_home_ready(view);
 }
 
 extern "C" __attribute__((visibility("default"))) void _nt_updatecover_hook(PowerViewController *self) {

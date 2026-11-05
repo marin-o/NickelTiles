@@ -73,21 +73,22 @@ void readKoreaderSidecar(const QString &file, NtRecentBook *book) {
 
 }   // namespace
 
-// KOReader's most recent book that still exists, from history.lua, whose
-// entries ([1] = { ... }, newest first) each hold a file and a time.
-NtRecentBook nt_recent_koreader_book() {
-    NtRecentBook book;
-    book.app = NtReaderApp::Koreader;
+// history.lua's entries ([1] = { ... }, newest first) each hold a file and a time.
+QList<NtRecentBook> nt_recent_koreader_books(int count) {
+    QList<NtRecentBook> books;
     const QString history = readText(QStringLiteral(NT_KOREADER_HISTORY));
     const QStringList entries = history.split(QRegularExpression(QStringLiteral("\\[\\d+\\] = \\{")));
     for (const QString &entry : entries) {
         const QString file = luaString(entry, "file");
         if (file.isEmpty() || !QFile::exists(file)) continue;
+        NtRecentBook book;
+        book.app = NtReaderApp::Koreader;
         book.path = file;
         book.lastRead = luaBareValue(entry, "time", 20).toLongLong();
         readKoreaderSidecar(file, &book);
         book.valid = true;
-        break;
+        books << book;
+        if (books.size() >= count) break;
     }
-    return book;
+    return books;
 }

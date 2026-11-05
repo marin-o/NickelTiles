@@ -11,7 +11,8 @@
 
 #include "ui/pressable.h"
 
-// A tappable control. Kind Button: rounded box with centred text. Kind Check:
+// A tappable control. Kind Button: rounded box with centred text, filled when
+// checked (the chosen tab). Kind Check:
 // a check box followed by the text, left aligned (a row in the tile list).
 // Kind Toggle: a fixed-width pill reading On (filled) or Off (outlined).
 class NtControl : public NtPressable {

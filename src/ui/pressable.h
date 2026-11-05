@@ -6,7 +6,12 @@
 // widget repaints while pressed and gets tapped() when the finger lifts inside
 // it, or longPressed() after a hold when long presses are enabled.
 
+#include <QTouchEvent>
 #include <QWidget>
+
+// Horizontal movement in px if the touch that just ended was a swipe (mostly
+// sideways and long enough), else 0.
+int nt_swipe_distance(const QTouchEvent *touch);
 
 class NtPressable : public QWidget {
 public:
@@ -22,6 +27,9 @@ public:
 protected:
     virtual void tapped() = 0;
     virtual void longPressed() {}
+    // A swipe that started on this widget. Returning true means it was used, so
+    // it is not also a tap.
+    virtual bool swiped(int /*distance*/) { return false; }
 
     bool event(QEvent *event) override;
     void timerEvent(QTimerEvent *event) override;

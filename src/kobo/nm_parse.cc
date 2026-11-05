@@ -29,8 +29,10 @@ static NtAction::Chain nt_chain_for(const QString &kind) {
     return NtAction::Always;
 }
 
+// NickelTiles' own entry (kobo/nm_entry) turns the tiles off and on; it is no tile.
 static bool nt_skip_file(const QString &name) {
-    return name == QLatin1String("doc") || name == QLatin1String("uninstall") || name.startsWith(QLatin1Char('.'));
+    return name == QLatin1String("doc") || name == QLatin1String("uninstall") ||
+           name == QLatin1String(NT_NM_ENTRY_NAME) || name.startsWith(QLatin1Char('.'));
 }
 
 // Handles one line. `current` is the entry that chain_* lines attach to; any

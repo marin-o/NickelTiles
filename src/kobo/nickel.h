@@ -26,6 +26,11 @@ void nt_toast(const QString &text, int ms = 1500);
 bool nt_confirm(const QString &title, const QString &text, const QString &acceptText, const QString &rejectText,
                 const std::function<void()> &onAccept);
 
+// Whether any Nickel dialog is open. Not all are modal or windows of their
+// own ("Computer detected" sits inside the main window), so this looks for any
+// visible one.
+bool nt_dialog_showing();
+
 bool nt_power_off();
 bool nt_reboot();
 bool nt_sleep();

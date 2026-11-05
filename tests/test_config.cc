@@ -29,11 +29,12 @@ QString readConfig() {
 void compareSettings(const NtSettings &got, const NtSettings &want) {
     QCOMPARE(got.enabled, want.enabled);
     QCOMPARE(got.actions, want.actions);
-    QCOMPARE(got.hideRows, want.hideRows);
+    QVERIFY(got.koboRows == want.koboRows);
     QCOMPARE(got.recent, want.recent);
     QVERIFY(got.recentSource == want.recentSource);
     QVERIFY(got.recentInfo == want.recentInfo);
     QCOMPARE(got.recentCover, want.recentCover);
+    QCOMPARE(got.recentCount, want.recentCount);
     QCOMPARE(got.sleepCover, want.sleepCover);
     QCOMPARE(got.columns, want.columns);
     QCOMPARE(got.tilePx, want.tilePx);
@@ -56,7 +57,19 @@ private slots:
     void saveReplacesChangedKeysInPlace();
     void saveEmptiedOrderRemovesLine();
     void saveRoundTrip();
+    void olderHideRowsKey();
 };
+
+// Readers updated from an older version have nt_hide_rows, not nt_kobo_rows.
+void TestConfig::olderHideRowsKey() {
+    setConfig("nt_hide_rows:0\n");
+    const NtSettings before = nt_settings();
+    QVERIFY(before.koboRows == NtKoboRows::All);
+    NtSettings after = before;
+    after.koboRows = NtKoboRows::Top;
+    QVERIFY(nt_settings_save(before, after));
+    QCOMPARE(readConfig(), QStringLiteral("nt_kobo_rows:top\n"));
+}
 
 void TestConfig::tilePx_data() {
     QTest::addColumn<QByteArray>("config");
@@ -114,8 +127,9 @@ void TestConfig::saveRoundTrip() {
     NtSettings want;
     want.enabled = false;
     want.actions = false;
-    want.hideRows = false;
+    want.koboRows = NtKoboRows::Top;
     want.recent = false;
+    want.recentCount = 4;
     want.recentSource = NtRecentSource::Plato;
     want.recentInfo.author = false;
     want.recentCover = false;

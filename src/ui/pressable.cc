@@ -4,9 +4,13 @@
 #include <QList>
 #include <QMouseEvent>
 #include <QTimerEvent>
+#include <QPointF>
 #include <QTouchEvent>
+#include <QtGlobal>
 
 namespace {
+
+const int kSwipeMinPx = 120;
 
 // A touch end counts as a tap on this widget if any finger lifted inside it;
 // with no points left (the touch was consumed) it counts as inside.
@@ -19,6 +23,14 @@ bool nt_touch_inside(const QWidget *w, const QTouchEvent *touch) {
 }
 
 }   // namespace
+
+int nt_swipe_distance(const QTouchEvent *touch) {
+    const QList<QTouchEvent::TouchPoint> &points = touch->touchPoints();
+    if (points.isEmpty()) return 0;
+    const QPointF moved = points.first().pos() - points.first().startPos();
+    const bool isSwipe = qAbs(moved.x()) >= kSwipeMinPx && qAbs(moved.x()) > 2 * qAbs(moved.y());
+    return isSwipe ? qRound(moved.x()) : 0;
+}
 
 NtPressable::NtPressable(QWidget *parent, int longPressMs) : QWidget(parent), m_longPressMs(longPressMs) {
     setAttribute(Qt::WA_AcceptTouchEvents, true);
@@ -76,10 +88,14 @@ bool NtPressable::event(QEvent *event) {
     case QEvent::TouchUpdate:
         event->accept();
         return true;
-    case QEvent::TouchEnd:
+    case QEvent::TouchEnd: {
         event->accept();
-        release(nt_touch_inside(this, static_cast<QTouchEvent *>(event)));
+        const QTouchEvent *touch = static_cast<QTouchEvent *>(event);
+        const int distance = nt_swipe_distance(touch);
+        // A swipe that fired after a long press stays a long press.
+        release(distance == 0 || m_longPressFired || !swiped(distance) ? nt_touch_inside(this, touch) : false);
         return true;
+    }
     case QEvent::TouchCancel:
         event->accept();
         release(false);

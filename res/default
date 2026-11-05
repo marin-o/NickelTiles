@@ -19,15 +19,20 @@ nt_log:0
 # Run a tile's action when it is tapped (default 1).
 nt_actions:1
 
-# Hide Kobo's own home rows so the grid is the home screen (default 1).
-# 0 keeps Kobo's home widgets under the tiles.
-nt_hide_rows:1
+# Kobo's own home rows (default hidden, so the grid is the home screen).
+# top keeps the row with the book you are reading, all keeps all three. Kept
+# rows share the first page with the tiles; the other tiles go on the next
+# pages, where Kobo's rows make way. (Older configs: nt_hide_rows:1 or 0.)
+nt_kobo_rows:hidden
 
 # "Continue reading" tile (default 1): the most recently opened book across
 # KOReader, Plato and Kobo's reader, opened in the app that read it, with the
 # cover taken from the EPUB. nt_recent_source: auto | koreader | plato | nickel.
 nt_recent:1
 nt_recent_source:auto
+# How many recent books get a tile, 1 to 10 (default 1). One tile per book, when
+# you have read that many. Tiles that don't fit go on further pages.
+nt_recent_count:1
 # What its caption shows: any of title, author, progress (comma separated),
 # or none. Default: title,author,progress.
 nt_recent_info:title,author,progress

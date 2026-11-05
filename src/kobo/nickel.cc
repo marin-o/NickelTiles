@@ -1,5 +1,6 @@
 #include "kobo/nickel.h"
 
+#include <QApplication>
 #include <QByteArray>
 #include <QCoreApplication>
 #include <QDialog>
@@ -190,6 +191,17 @@ bool nt_confirm(const QString &title, const QString &text, const QString &accept
     QObject::connect(dialog, &QDialog::accepted, onAccept);
     dialog->open();
     return true;
+}
+
+bool nt_dialog_showing() {
+    const QWidgetList windows = QApplication::topLevelWidgets();
+    for (const QWidget *w : windows) {
+        if (!w->isVisible()) continue;
+        if (qobject_cast<const QDialog *>(w)) return true;
+        for (const QDialog *d : w->findChildren<QDialog *>())
+            if (d->isVisible()) return true;
+    }
+    return false;
 }
 
 bool nt_power_off() {

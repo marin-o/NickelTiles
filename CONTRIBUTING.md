@@ -122,8 +122,9 @@ These protect people's books and readers:
 
 - Never trigger a Nickel library rescan; on the development reader one
   deleted sideloaded books.
-- Write only inside `.adds/nickel-tiles/` and `.kobo/screensaver/` (and only
-  the file NickelTiles owns there). Never touch Kobo's databases or
+- Write only inside `.adds/nickel-tiles/`, `.kobo/screensaver/` and
+  `.adds/nm/`, and in the last two only the files NickelTiles owns there
+  (its sleep cover and, when the user agrees, its `nickel-tiles` menu file). Never touch Kobo's databases or
   `Kobo eReader.conf`.
 - Anything that runs during Nickel's startup must be fast and must not crash:
   a crash in the first seconds disables every NickelHook mod on the reader.

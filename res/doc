@@ -25,20 +25,24 @@
 #   - Extra tiles from tile: lines in the config.
 #
 # Using it
-#   - The "Tiles settings" tile (gear) opens a settings page: tiles per row,
-#     tile size, the Continue reading tile and where it takes the book from,
-#     the sleep screen cover, Kobo's home rows, and which tiles are shown.
+#   - The "Tiles settings" tile (gear) opens a settings page with tabs along
+#     the bottom: Layout (tiles per row, tile size, Kobo's home rows), Books
+#     (the Continue reading tile, how many recent books get a tile and where
+#     they come from, the sleep screen cover), Tiles (which tiles are shown)
+#     and Help (short explanations, the NickelMenu switch, add-on repair).
 #     Save applies at once; Cancel leaves everything as it was.
 #     Switched-off add-ons: NickelHook add-ons a crash left off (NickelMenu,
 #     KPM, NickelHome, ...); Repair turns them back on, then restart.
 #   - Tap a tile: it darkens while pressed and runs when released.
+#   - More tiles than fit: swipe left or right, or use the arrows under the
+#     tiles, to change page.
 #   - Long-press a tile (about 0.7 s): it gets a thick frame (arrange mode).
 #     Tap another tile to swap the two; tap the same tile to cancel. The new
 #     order is saved to the config (order: line).
 #
 # Configuration: KOBOeReader/.adds/nickel-tiles/config (key:value, # comments,
 # reboot to apply). See the default file for every key.
-#   nt_enabled, nt_log, nt_actions, nt_hide_rows, nt_recent, nt_recent_source, nt_recent_info, nt_recent_cover,
+#   nt_enabled, nt_log, nt_actions, nt_kobo_rows, nt_recent, nt_recent_count, nt_recent_source, nt_recent_info, nt_recent_cover,
 #   nt_sleep_cover, nt_columns, nt_tile_px, hide:<label>, icon:<label>:<png>, order:<a>|<b>|..,
 #   tile:<label>:<icon>:<command>
 #
@@ -54,3 +58,31 @@
 # disabled on the next boot (NickelHook renames it out of the way). Reinstall
 # the package to re-enable it. Do not launch an app in the first seconds after
 # the home screen appears.
+#
+# If something goes wrong: NickelMenu > "NickelTiles off/on" (offered on first
+# start, or Tiles settings > Help > Off/on switch in NickelMenu) turns the tiles off
+# and restarts. If Kobo crashes three times in a row within 30 seconds of
+# starting, NickelTiles turns itself off and offers to turn back on. Over USB:
+# nt_enabled:0 in config. Crashes are always written to nickel-tiles.log.
+#
+# Credits: NickelTiles contains code from NickelHook (Copyright (c) 2020-2025
+# Patrick Gaskin) and follows NickelHome (Copyright (c) 2026 Nico Verbruggen)
+# in finding Kobo's home rows and parsing its config. Both are MIT licensed:
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

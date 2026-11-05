@@ -22,9 +22,10 @@ NickelHome.
 - **Sleep screen follows that book.** With Kobo's *Show book covers full
   screen* setting on, the sleep screen shows the same book's cover, not just
   the last book opened in Kobo's reader.
-- **Settings on the reader.** The *Tiles settings* tile opens a page for
-  tiles per row, tile size, which tiles are shown, and the options above.
-  Changes apply at once.
+- **Settings on the reader.** The *Tiles settings* tile opens a page with
+  tabs along the bottom: *Layout* (tiles per row, tile size, Kobo's home
+  rows), *Books* (the book tiles and sleep screen), *Tiles* (which tiles are
+  shown) and *Help*. Changes apply at once.
 - **Repair switched-off add-ons.** The settings page lists NickelHook add-ons
   (NickelMenu, KPM, NickelHome, ...) that a crash left switched off, and turns
   them back on with one tap.
@@ -69,11 +70,18 @@ NickelMenu is optional; without it the grid has the built-in tiles and any
 
 ## Use
 
-The grid replaces Kobo's home rows. To keep Kobo's own home widgets, turn off
-*Hide Kobo's home rows* in Tiles settings; the rows that don't fit with the
-tiles stay hidden, lowest first. Until there is
+The grid replaces Kobo's home rows. To keep Kobo's own home widgets, set
+*Kobo's home rows* in Tiles settings > Layout to *Top row* (the book you are reading) or
+*All rows*. Kept rows share the first page with as many tiles as fit under
+them; the other tiles go on the next pages, where Kobo's rows make way.
+
+*Book tiles* in Tiles settings > Books gives your recent books a tile each, up to 10. A
+book read in two apps gets one tile, and a Plato book opens Plato on its own last
+book, since Plato can't be told which to open. When tiles don't fit on the screen
+they go on further pages: swipe sideways, or use the arrows under the tiles. Until there is
 something to show besides the settings tile (a NickelMenu entry or a recent
-book), Kobo's rows stay visible. Tiles size
+book), Kobo's rows stay visible, with the settings tile in the empty half of the
+top row. Tiles size
 themselves to fill the screen's width; set a fixed size there if you prefer.
 
 | Action | What happens |
@@ -104,7 +112,7 @@ the settings page (or `nt_sleep_cover:0`).
 If Kobo crashes within a few seconds of starting (it can happen when an app
 hands control back to Kobo), NickelHook add-ons switch themselves off to avoid
 a crash loop, and stay off: NickelMenu disappears, KPM's window no longer
-opens, and so on. *Tiles settings > Switched-off add-ons* lists them; Repair
+opens, and so on. *Tiles settings > Help > Switched-off add-ons* lists them; Repair
 turns them back on and offers to restart the reader now or later (they load
 at the next restart). The button waits until Kobo has
 been running for 30 seconds, because every add-on is briefly in that state
@@ -113,12 +121,33 @@ while it starts.
 NickelTiles cannot repair itself: if the tiles are gone, install the package
 again (KPM or `KoboRoot.tgz`).
 
+### If something goes wrong
+
+NickelTiles only changes the Home tab, so My Books, More, NickelMenu and the
+USB connection keep working even if Home looks broken. From most to least
+convenient:
+
+- **NickelMenu > NickelTiles off/on** turns the tiles off (or back on) and
+  restarts the reader. NickelTiles offers to add this entry the first time it
+  starts; you can also switch it on in *Tiles settings > Help > Off/on switch
+  in NickelMenu*. If you remove NickelTiles, the entry deletes itself the next
+  time you choose it.
+- **Automatic:** if Kobo crashes three times in a row within 30 seconds of
+  starting, NickelTiles turns itself off and says so, with a button to turn it
+  back on. Ordinary restarts, such as opening KOReader, don't count.
+- **Over USB:** in `.adds/nickel-tiles/config`, set `nt_enabled:0` and restart.
+  To remove NickelTiles entirely, see Uninstall below.
+
+Each start, and any crash with where it happened, is written to
+`.adds/nickel-tiles/nickel-tiles.log`. Please attach it when you report a
+problem.
+
 ## Uninstall
 
 Through KPM, or create an empty file named `uninstall` in
 `.adds/nickel-tiles/` and reboot (deleting the folder works too). The mod
-removes its library and its sleep screen image (`.kobo/screensaver/nt-recent.*`)
-on the next start; the settings folder stays unless you deleted it.
+removes its library, its sleep screen image (`.kobo/screensaver/nt-recent.*`)
+and its NickelMenu entry on the next start; the settings folder stays unless you deleted it.
 
 ## Build
 
@@ -163,6 +192,17 @@ relies on.
 Bug reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 Pull requests go to the `dev` branch.
 
+## Acknowledgements
+
+- [NickelHome](https://github.com/nicoverbruggen/NickelHome) by Nico
+  Verbruggen: how NickelTiles finds and hides Kobo's home rows, and the
+  structure of its config parser, follow NickelHome.
+- [NickelHook](https://github.com/pgaskin/NickelHook) and
+  [NickelMenu](https://github.com/pgaskin/NickelMenu) by Patrick Gaskin:
+  NickelHook loads the mod into Kobo's software, and tiles run NickelMenu's
+  actions the way NickelMenu does.
+
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Code from other projects and their notices:
+[THIRD-PARTY.md](THIRD-PARTY.md).

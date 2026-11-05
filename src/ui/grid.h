@@ -5,7 +5,8 @@
 // by Ui_HomePageView::setupUi; see docs/homepage-map.md):
 //   HomePageView > verticalLayout > mainContainer > mainLayout (QVBoxLayout)
 //     [0] row1: current read, [1] row2: My Books / Top picks, [2] row3: Kobo store links
-// The grid goes first in mainLayout; with nt_hide_rows the three rows are hidden.
+// The grid goes first in mainLayout when Kobo's rows are hidden, else after row1;
+// kept rows share its first page (nt_kobo_rows).
 
 #include <QStringList>
 #include <QWidget>

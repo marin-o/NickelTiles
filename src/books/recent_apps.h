@@ -1,20 +1,23 @@
 #ifndef NT_RECENT_APPS_H
 #define NT_RECENT_APPS_H
 
-// Each app's own record of its most recent book. Their formats belong to those
-// apps and change for their own reasons, so each lives in its own file. Each
-// returns an invalid book when the app has no usable record. Use nt_recent_book
-// (books/recent.h) unless you need one specific app.
+// Each app's own record of its recent books. Their formats belong to those apps
+// and change for their own reasons, so each lives in its own file. Each returns
+// up to `count` books that still exist, newest first, and nothing when the app
+// has no usable record. Use nt_recent_books (books/recent.h) unless you need one
+// specific app.
+
+#include <QList>
 
 #include "books/recent.h"
 
 // KOReader: history.lua and the book's .sdr sidecar.
-NtRecentBook nt_recent_koreader_book();
+QList<NtRecentBook> nt_recent_koreader_books(int count);
 
 // Plato: .metadata.json and .reading-states.
-NtRecentBook nt_recent_plato_book();
+QList<NtRecentBook> nt_recent_plato_books(int count);
 
 // Nickel: KoboReader.sqlite, read through the sqlite3 already loaded in Nickel.
-NtRecentBook nt_recent_nickel_book();
+QList<NtRecentBook> nt_recent_nickel_books(int count);
 
 #endif
