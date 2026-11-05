@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QStringList>
 #include <QVector>
+#include <QtGlobal>
 
 #include <cstring>
 
@@ -13,8 +14,10 @@ namespace {
 
 const char kKeyEnabled[] = "nt_enabled";
 const char kKeyActions[] = "nt_actions";
-const char kKeyHideRows[] = "nt_hide_rows";
+const char kKeyKoboRows[] = "nt_kobo_rows";
+const char kKeyHideRows[] = "nt_hide_rows";   // the older on/off form of nt_kobo_rows
 const char kKeyRecent[] = "nt_recent";
+const char kKeyRecentCount[] = "nt_recent_count";
 const char kKeyRecentSource[] = "nt_recent_source";
 const char kKeyRecentInfo[] = "nt_recent_info";
 const char kKeyRecentCover[] = "nt_recent_cover";
@@ -44,6 +47,27 @@ const char *sourceName(NtRecentSource source) {
         break;
     }
     return "auto";
+}
+
+// nt_kobo_rows, else the older nt_hide_rows (1 hides all rows, 0 keeps them).
+NtKoboRows parseKoboRows(const char *value, NtKoboRows fallback) {
+    if (!value)
+        return nt_config_bool(kKeyHideRows, fallback == NtKoboRows::Hidden) ? NtKoboRows::Hidden : NtKoboRows::All;
+    if (!strcmp(value, "top")) return NtKoboRows::Top;
+    if (!strcmp(value, "all")) return NtKoboRows::All;
+    return NtKoboRows::Hidden;
+}
+
+const char *koboRowsName(NtKoboRows rows) {
+    switch (rows) {
+    case NtKoboRows::Top:
+        return "top";
+    case NtKoboRows::All:
+        return "all";
+    case NtKoboRows::Hidden:
+        break;
+    }
+    return "hidden";
 }
 
 // Unset or empty means all three; "none" comes out as all false.
@@ -117,8 +141,9 @@ NtSettings nt_settings() {
     NtSettings s;
     s.enabled = nt_config_bool(kKeyEnabled, defaults.enabled);
     s.actions = nt_config_bool(kKeyActions, defaults.actions);
-    s.hideRows = nt_config_bool(kKeyHideRows, defaults.hideRows);
+    s.koboRows = parseKoboRows(nt_config_get(kKeyKoboRows), defaults.koboRows);
     s.recent = nt_config_bool(kKeyRecent, defaults.recent);
+    s.recentCount = qBound(1, nt_config_int(kKeyRecentCount, defaults.recentCount), kNtRecentCountMax);
     s.recentSource = parseSource(nt_config_get(kKeyRecentSource));
     s.recentInfo = parseInfo(nt_config_get(kKeyRecentInfo));
     s.recentCover = nt_config_bool(kKeyRecentCover, defaults.recentCover);
@@ -135,8 +160,12 @@ bool nt_settings_save(const NtSettings &before, const NtSettings &after) {
     bool ok = true;
     if (before.enabled != after.enabled) ok &= setValue(kKeyEnabled, flag(after.enabled));
     if (before.actions != after.actions) ok &= setValue(kKeyActions, flag(after.actions));
-    if (before.hideRows != after.hideRows) ok &= setValue(kKeyHideRows, flag(after.hideRows));
+    if (before.koboRows != after.koboRows) {
+        ok &= setValue(kKeyKoboRows, QString::fromLatin1(koboRowsName(after.koboRows)));
+        if (nt_config_get(kKeyHideRows)) ok &= nt_config_set(kKeyHideRows, nullptr, 0);
+    }
     if (before.recent != after.recent) ok &= setValue(kKeyRecent, flag(after.recent));
+    if (before.recentCount != after.recentCount) ok &= setValue(kKeyRecentCount, QString::number(after.recentCount));
     if (before.recentSource != after.recentSource)
         ok &= setValue(kKeyRecentSource, QString::fromLatin1(sourceName(after.recentSource)));
     if (before.recentInfo != after.recentInfo) ok &= setValue(kKeyRecentInfo, infoText(after.recentInfo));
@@ -150,8 +179,8 @@ bool nt_settings_save(const NtSettings &before, const NtSettings &after) {
         ok &= after.order.isEmpty() ? nt_config_set(kKeyOrder, nullptr, 0)
                                     : setValue(kKeyOrder, after.order.join(QStringLiteral("|")));
 
-    NT_LOG("settings: saved ok=%d columns=%d px=%d recent=%d source=%s sleep=%d hide_rows=%d hidden=%d order=%d",
+    NT_LOG("settings: saved ok=%d columns=%d px=%d recent=%d source=%s sleep=%d kobo_rows=%s hidden=%d order=%d",
            ok ? 1 : 0, after.columns, after.tilePx, after.recent ? 1 : 0, sourceName(after.recentSource),
-           after.sleepCover ? 1 : 0, after.hideRows ? 1 : 0, after.hidden.size(), after.order.size());
+           after.sleepCover ? 1 : 0, koboRowsName(after.koboRows), after.hidden.size(), after.order.size());
     return ok;
 }

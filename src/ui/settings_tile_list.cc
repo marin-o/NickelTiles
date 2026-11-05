@@ -6,7 +6,7 @@
 
 namespace {
 
-const int kTilesPerPage = 6;   // two columns of three
+const int kTilesPerPage = 12;   // two columns of six; the list has a tab of its own
 
 }   // namespace
 

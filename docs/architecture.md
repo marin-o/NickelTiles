@@ -20,8 +20,9 @@ grid calls that tile's `activate()`. For Continue reading that is
 `nt_open_recent_book` (`books/open_book`): KOReader and Plato are launched through
 `kobo/actions`, Nickel books open through `nt_open_in_nickel` (`kobo/nickel`).
 
-**Showing the most recent book.** `NtRecentTile::refresh` calls `nt_recent_book`,
-which reads each app's records and keeps the newest. It runs when Home is shown
+**Showing the recent books.** `NtGrid::refreshRecents` calls `nt_recent_books`,
+which reads each app's records, keeps one entry per book and sorts them newest
+first; each `NtRecentTile` takes one with `setBook`. It runs when Home is shown
 and again shortly after, since apps and Nickel update their records late.
 
 **Going to sleep.** `N3PowerWorkflowManager::show` passes Kobo's latest book to
@@ -30,9 +31,28 @@ the Continue reading book instead (decision 002). `loadView` then calls `updateC
 and `_nt_updatecover_hook` runs `nt_sleep_cover_refresh` first, which keeps the cover
 in `.kobo/screensaver` for Kobo to display.
 
-**Building Home.** `_nt_setupui_hook` calls `nt_install_grid`, which decides whether
-Kobo's rows stay (decision 003), builds the tiles and inserts the grid. Saving in
-Tiles settings runs `nt_install_grid` again.
+**Building Home.** `_nt_setupui_hook` calls `nt_install_grid`. It asks
+`nt_kobo_rows_to_keep` (`grid_rules`) how many of Kobo's rows stay (decision 003),
+keeps them with `nt_keep_rows` (`home_rows`), builds the tiles and inserts the grid.
+Saving in Tiles settings runs `nt_install_grid` again.
+
+**Turning pages.** `NtGrid::relayout` measures the room (`measureRoom`) while
+Kobo's kept rows show, and `nt_plan_pages` (`grid_rules`) spreads the tiles: the
+first page shares the room with Kobo's rows, later pages have it all. The arrows
+and a sideways swipe (`nt_swipe_distance`, `pressable`) call `turnPage`, and
+`showKoboRows` hides Kobo's rows off the first page.
+
+**A crash soon after start.** `nt_init` installs `nt_crash_log_install`
+(`core/crash_log`) and calls `nt_crash_guard_start` (`core/crash_guard`). A crash
+signal is logged and counted with `nt_crash_guard_crashed`; once Home has run 30 s,
+`nt_startup_home_ready` (`ui/startup`) clears the count. After three early crashes
+in a row the guard turns NickelTiles off, and `startup` offers to turn it back on
+(decision 005).
+
+**The NickelMenu off/on entry.** `startup` offers it once, through
+`nt_nm_entry_offer_due`; `nt_nm_entry_set` (`kobo/nm_entry`) writes or removes
+`.adds/nm/nickel-tiles`. The entry's own shell command flips `nt_enabled` and
+restarts, or deletes the file when NickelTiles is gone (decision 006).
 
 Reasons behind the less obvious choices are in `docs/decisions/`.
 
@@ -48,10 +68,13 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 | | `config` | The raw `key:value` config file: parse, cache, atomic in-place writes (C) |
 | | `settings_model` | All settings as one `NtSettings` value with names and defaults in one place; load and save |
 | | `paths` | Fixed locations on the reader (header only) |
+| | `crash_guard` | Counts crashes soon after start and turns NickelTiles off after three in a row |
+| | `crash_log` | Logs a crash (signal, where, backtrace) to the log file whatever `nt_log` says, and tells the crash guard |
 | `kobo/` | `nickel` | Typed wrappers over the optional libnickel functions (toast, dialog, power, Wi-Fi, home, open a book in Nickel's reader) |
 | | `nm_parse` | Reads NickelMenu's config files into entries |
 | | `actions` | Runs NickelMenu actions and plain shell commands |
 | | `addons` | Finds and restores NickelHook add-ons a crash left switched off |
+| | `nm_entry` | NickelTiles' own "NickelTiles off/on" NickelMenu entry: add, remove, offer once |
 | `books/` | `recent` | The most recently read book across KOReader, Plato and Nickel |
 | | `recent_koreader`, `recent_plato`, `recent_nickel` | Each reads one app's records (declared in `recent_apps.h`) |
 | | `open_book` | Opens a book in the app that last read it |
@@ -63,12 +86,14 @@ folders by job, and includes name the folder (`#include "books/cover.h"`).
 | | `ui` | Fonts, word wrap, debug screenshots |
 | | `layout` | Tile size and grid fit arithmetic, shared by the grid and the settings page |
 | | `tiles` | The tile widgets |
-| | `grid` | The grid on the home page: building, arranging, inserting into Nickel's layout |
+| | `grid` | The grid on the home page: building, arranging, pages, inserting into Nickel's layout |
+| | `home_rows` | Kobo's own home rows: finding, hiding and showing them, and their real height |
 | | `grid_rules` | The grid's decisions, such as saved tile order; plain functions, no widgets |
-| | `settings_page` | The on-device settings page: layout and wiring |
+| | `settings_page` | The on-device settings page: tabs, layout and wiring |
 | | `settings_rules` | What the page's controls may do and produce; plain functions, no widgets |
 | | `settings_tile_list` | The page's paged list of tiles to show |
 | | `controls` | The page's button, check row, toggle and label |
+| | `startup` | Once Home first shows: tells the crash guard Nickel settled, and the dialogs it or the NickelMenu offer need |
 
 Dependencies point downwards: `ui/` uses `books/` and `kobo/`, which use
 `core/`. Widgets stay in `ui/`; the exceptions are `plugin.cc`, which receives

@@ -13,10 +13,10 @@ namespace {
 const int kSqliteOpenReadOnly = 1;
 const int kSqliteRow = 100;
 
-// Nickel's last-read query: the newest file-backed book with a read time.
+// Nickel's last-read query: file-backed books with a read time, newest first.
 const char kLastReadSql[] = "select ContentID, Title, Attribution, DateLastRead, ___PercentRead from content "
                             "where ContentType='6' and ContentID like 'file://%' and DateLastRead is not null "
-                            "order by DateLastRead desc limit 1";
+                            "order by DateLastRead desc";
 
 // The sqlite3 functions Nickel already has loaded; looked up by name, so
 // each may be missing on another firmware.
@@ -70,26 +70,30 @@ void readNickelRow(const Sqlite &sql, void *stmt, NtRecentBook *book) {
 
 }   // namespace
 
-// Nickel's last-read book from KoboReader.sqlite, read-only and WAL-safe.
-NtRecentBook nt_recent_nickel_book() {
-    NtRecentBook book;
-    book.app = NtReaderApp::Nickel;
+// From KoboReader.sqlite, read-only and WAL-safe.
+QList<NtRecentBook> nt_recent_nickel_books(int count) {
+    QList<NtRecentBook> books;
     Sqlite sql;
     if (!loadSqlite(&sql)) {
         NT_DBG("recent (nickel): sqlite3 symbols unavailable");
-        return book;
+        return books;
     }
     void *db = nullptr;
     const int rc = sql.open(QStringLiteral(NT_KOBO_DB).toUtf8().constData(), &db, kSqliteOpenReadOnly, nullptr);
     if (rc != 0 || !db) {
         if (db) sql.close(db);
-        return book;
+        return books;
     }
     void *stmt = nullptr;
     if (sql.prepare(db, kLastReadSql, -1, &stmt, nullptr) == 0 && stmt) {
-        if (sql.step(stmt) == kSqliteRow) readNickelRow(sql, stmt, &book);
+        while (books.size() < count && sql.step(stmt) == kSqliteRow) {
+            NtRecentBook book;
+            book.app = NtReaderApp::Nickel;
+            readNickelRow(sql, stmt, &book);
+            if (book.valid) books << book;
+        }
         sql.finalize(stmt);
     }
     sql.close(db);
-    return book;
+    return books;
 }

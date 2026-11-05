@@ -73,12 +73,9 @@ void NtControl::paintCheck(QPainter &p) {
 void NtControl::paintBox(QPainter &p) {
     const QRect box = rect().adjusted(3, 3, -3, -3);
     const bool enabled = isPressEnabled();
-    bool filled = isPressed();
+    const bool filled = m_checked != isPressed();
     QString text = m_text;
-    if (m_kind == Toggle) {
-        filled = m_checked != isPressed();
-        text = m_checked ? QStringLiteral("On") : QStringLiteral("Off");
-    }
+    if (m_kind == Toggle) text = m_checked ? QStringLiteral("On") : QStringLiteral("Off");
     // A disabled control is drawn dotted, so it is not mistaken for a filled one.
     if (!enabled) {
         p.setPen(QPen(Qt::black, 2, Qt::DotLine));

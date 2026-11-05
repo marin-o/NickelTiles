@@ -21,5 +21,11 @@
 #define NT_ICON_DIR NT_CONFIG_DIR "/icons"
 #define NT_COVER_CACHE_DIR NT_CONFIG_DIR "/covers"
 #define NT_SLEEP_COVER_STAMP NT_CONFIG_DIR "/sleep-cover.src"
+#define NT_CRASH_COUNT NT_CONFIG_DIR "/early-crashes"
+#define NT_NM_ENTRY_OFFERED NT_CONFIG_DIR "/nm-entry-offered"
+#define NT_NM_ENTRY_NAME "nickel-tiles"
+#define NT_NM_ENTRY NT_NICKELMENU_DIR "/" NT_NM_ENTRY_NAME
+#define NT_NM_LIBRARY NT_PLUGIN_DIR "/libnm.so"
+#define NT_LIBRARY NT_PLUGIN_DIR "/libnickeltiles.so"
 
 #endif

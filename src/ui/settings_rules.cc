@@ -27,6 +27,10 @@ int sourceIndex(NtRecentSource source) {
     return 0;
 }
 
+// The Kobo rows button cycles in the enum's order: Hidden, Top, All.
+const char *const kKoboRowsNames[] = {"Hidden", "Top row", "All rows"};
+const int kKoboRowsCount = sizeof(kKoboRowsNames) / sizeof(kKoboRowsNames[0]);
+
 }   // namespace
 
 NtSizeLimits nt_size_limits(const NtSettings &settings, int width) {
@@ -45,12 +49,24 @@ int nt_stepped_tile_size(const NtSettings &settings, int step, int width) {
     return qBound(kNtTileMinPx, (current + step) / kTileStepPx * kTileStepPx, kNtTileMaxPx);
 }
 
+int nt_recent_count_within_limits(int count) {
+    return qBound(1, count, kNtRecentCountMax);
+}
+
 NtRecentSource nt_next_source(NtRecentSource source) {
     return kSources[(sourceIndex(source) + 1) % kSourceCount].source;
 }
 
 QString nt_source_name(NtRecentSource source) {
     return QString::fromUtf8(kSources[sourceIndex(source)].name);
+}
+
+NtKoboRows nt_next_kobo_rows(NtKoboRows rows) {
+    return static_cast<NtKoboRows>((static_cast<int>(rows) + 1) % kKoboRowsCount);
+}
+
+QString nt_kobo_rows_name(NtKoboRows rows) {
+    return QString::fromLatin1(kKoboRowsNames[static_cast<int>(rows)]);
 }
 
 QStringList nt_hidden_after(const QStringList &initialHidden, const QStringList &labels, const QSet<QString> &hidden) {

@@ -7,6 +7,8 @@
 #include <QJsonObject>
 #include <QStringList>
 
+#include <algorithm>
+
 #include "core/paths.h"
 #include "core/util.h"
 
@@ -39,17 +41,16 @@ int platoPercent(const QJsonObject &state) {
 // Plato keeps its library index at the root of onboard: .metadata.json, one
 // object per book with "file": {"path": ...}. Per-book state is in
 // .reading-states/<fingerprint>.json, where <fingerprint> is the book's key in
-// the index. The newest opened state of a book that still exists wins.
-NtRecentBook nt_recent_plato_book() {
-    NtRecentBook book;
-    book.app = NtReaderApp::Plato;
+// the index.
+QList<NtRecentBook> nt_recent_plato_books(int count) {
+    QList<NtRecentBook> books;
     QFile f(QStringLiteral(NT_PLATO_METADATA));
-    if (!f.open(QIODevice::ReadOnly)) return book;
+    if (!f.open(QIODevice::ReadOnly)) return books;
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(f.readAll(), &err);
     if (!doc.isObject()) {
         NT_DBG("recent (plato): metadata parse: %s", qPrintable(err.errorString()));
-        return book;
+        return books;
     }
     const QJsonObject index = doc.object();
     const QDir states(QStringLiteral(NT_PLATO_STATES));
@@ -57,7 +58,7 @@ NtRecentBook nt_recent_plato_book() {
     for (const QString &name : files) {
         const QJsonObject state = readJsonObject(states.filePath(name));
         const qint64 opened = platoOpenedTime(state);
-        if (opened < 0 || opened <= book.lastRead) continue;
+        if (opened < 0) continue;
         const QString key = name.left(name.size() - 5);
         const QJsonObject entry = index.value(key).toObject();
         if (entry.isEmpty()) {
@@ -67,6 +68,8 @@ NtRecentBook nt_recent_plato_book() {
         const QString path = QStringLiteral(NT_ONBOARD "/") +
                              entry.value(QStringLiteral("file")).toObject().value(QStringLiteral("path")).toString();
         if (!QFile::exists(path)) continue;
+        NtRecentBook book;
+        book.app = NtReaderApp::Plato;
         book.lastRead = opened;
         book.path = path;
         book.title = entry.value(QStringLiteral("title")).toString();
@@ -74,6 +77,9 @@ NtRecentBook nt_recent_plato_book() {
         book.percent = platoPercent(state);
         book.valid = true;
         if (book.title.isEmpty()) book.title = book.path.section(QLatin1Char('/'), -1).section(QLatin1Char('.'), 0, -2);
+        books << book;
     }
-    return book;
+    std::stable_sort(books.begin(), books.end(),
+                     [](const NtRecentBook &a, const NtRecentBook &b) { return a.lastRead > b.lastRead; });
+    return books.mid(0, count);
 }

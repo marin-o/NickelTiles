@@ -53,6 +53,7 @@ private slots:
     void koreaderSkipsDeletedBook();
     void platoBook();
     void anyPicksNewestApp();
+    void severalBooksNewestFirstOncePerPath();
 };
 
 void TestRecent::koreaderBookWithSidecar() {
@@ -113,6 +114,26 @@ void TestRecent::anyPicksNewestApp() {
     QVERIFY(book.valid);
     QVERIFY(book.app == NtReaderApp::Plato);
     QCOMPARE(book.title, QStringLiteral("Plato Book"));
+}
+
+// A book read in KOReader and Plato gets one tile, and `count` limits the list.
+void TestRecent::severalBooksNewestFirstOncePerPath() {
+    writePlatoBook();
+    const QString shared = bookPath(QStringLiteral("b.epub"));
+    const QString older = bookPath(QStringLiteral("older.epub"));
+    const QString oldest = bookPath(QStringLiteral("oldest.epub"));
+    QVERIFY(writeFile(older, QByteArray("book")));
+    QVERIFY(writeFile(oldest, QByteArray("book")));
+    const QByteArray text = "return {\n [1] = {\n  [\"time\"] = 1700000300,\n  [\"file\"] = \"" + shared.toUtf8() +
+                            "\",\n },\n [2] = {\n  [\"time\"] = 1000,\n  [\"file\"] = \"" + older.toUtf8() +
+                            "\",\n },\n [3] = {\n  [\"time\"] = 900,\n  [\"file\"] = \"" + oldest.toUtf8() +
+                            "\",\n },\n}\n";
+    QVERIFY(writeFile(QStringLiteral(NT_KOREADER_HISTORY), text));
+
+    const QList<NtRecentBook> books = nt_recent_books(NtRecentSource::Any, 2);
+    QCOMPARE(books.size(), 2);
+    QCOMPARE(books.at(0).path, shared);
+    QCOMPARE(books.at(1).path, older);
 }
 
 QTEST_MAIN(TestRecent)

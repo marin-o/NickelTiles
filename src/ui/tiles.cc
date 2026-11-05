@@ -134,6 +134,10 @@ void NtTile::longPressed() {
     m_host->tileLongPressed(this);
 }
 
+bool NtTile::swiped(int distance) {
+    return m_host->tileSwiped(distance);
+}
+
 void NtTile::paintEvent(QPaintEvent *) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
@@ -200,26 +204,32 @@ void NtSettingsTile::activate() {
 
 const char *const NtRecentTile::kLabel = "Continue reading";
 
-NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings)
-    : NtTile(parent, host, QString::fromLatin1(kLabel), px), m_recentSource(settings.recentSource),
-      m_recentInfo(settings.recentInfo), m_recentCover(settings.recentCover) {
-    setIcon(nt_icon_for(label(), QString()));
+QString NtRecentTile::labelFor(int slot) {
+    return slot == 0 ? QString::fromLatin1(kLabel) : QStringLiteral("Recent book ") + QString::number(slot + 1);
 }
 
-void NtRecentTile::refresh() {
-    m_book = nt_recent_book(m_recentSource);
-    if (!m_book.valid) {
-        setVisible(false);
-        NT_DBG("recent: no book");
-        return;
+NtRecentTile::NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings, int slot)
+    : NtTile(parent, host, labelFor(slot), px), m_recentInfo(settings.recentInfo), m_recentCover(settings.recentCover) {
+    setIcon(nt_icon_for(QString::fromLatin1(kLabel), QString()));
+}
+
+bool NtRecentTile::setBook(const NtRecentBook &book) {
+    const bool contentChanged = book.valid != m_book.valid;
+    // Home refreshes often, and loading a cover on the reader is not free.
+    const bool sameCover = book.path == m_book.path;
+    const bool sameCaption =
+        sameCover && book.title == m_book.title && book.author == m_book.author && book.percent == m_book.percent;
+    m_book = book;
+    if (!book.valid || sameCaption) return contentChanged;
+    if (!sameCover) {
+        QPixmap cover;
+        if (m_recentCover) cover = nt_book_cover(book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
+        setIcon(cover.isNull() ? nt_icon_for(QString::fromLatin1(kLabel), QString()) : cover);
     }
-    QPixmap cover;
-    if (m_recentCover) cover = nt_book_cover(m_book.path, QStringLiteral(NT_COVER_CACHE_DIR), 400);
-    setIcon(cover.isNull() ? nt_icon_for(label(), QString()) : cover);
-    setVisible(true);
     update();
-    NT_LOG("recent: %s '%s' by '%s' %d%% -> %s", nt_reader_app_name(m_book.app), qPrintable(m_book.title),
-           qPrintable(m_book.author), m_book.percent, qPrintable(m_book.path));
+    NT_LOG("recent: %s '%s' by '%s' %d%% -> %s", nt_reader_app_name(book.app), qPrintable(book.title),
+           qPrintable(book.author), book.percent, qPrintable(book.path));
+    return contentChanged;
 }
 
 // Title, author and progress on their own lines, as chosen by nt_recent_info.

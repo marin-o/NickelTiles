@@ -1,3 +1,6 @@
+// The parser's structure follows NickelHome's config.c by Nico Verbruggen
+// (MIT); see THIRD-PARTY.md.
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -24,7 +27,9 @@ static const char *const known_keys[] = {
     "nt_log",
     "nt_actions",
     "nt_hide_rows",
+    "nt_kobo_rows",
     "nt_recent",
+    "nt_recent_count",
     "nt_columns",
     "nt_tile_px",
     "nt_recent_source",

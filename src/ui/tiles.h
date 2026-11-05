@@ -24,6 +24,8 @@ public:
     virtual ~NtTileHost() = default;
     virtual void tileTapped(NtTile *tile) = 0;
     virtual void tileLongPressed(NtTile *tile) = 0;
+    // A swipe across a tile. Returns whether it was used (it turned the page).
+    virtual bool tileSwiped(int distance) = 0;
 };
 
 class NtTile : public NtPressable {
@@ -44,6 +46,9 @@ public:
     // working when nt_actions is off.
     virtual bool runsAction() const { return true; }
 
+    // False for a tile with nothing to show right now, which takes no place in the grid.
+    virtual bool hasContent() const { return true; }
+
 protected:
     void setIcon(const QPixmap &icon);
 
@@ -52,6 +57,7 @@ protected:
 
     void tapped() override;
     void longPressed() override;
+    bool swiped(int distance) override;
     void paintEvent(QPaintEvent *event) override;
 
 private:
@@ -95,23 +101,31 @@ private:
     std::function<void()> m_open;
 };
 
-// Continue reading: the most recent book, with its cover or (when the recent
-// cover setting is off, or the book has none) a book icon; hidden when there
-// is no book. Takes the recent: settings (source, caption, cover) from
-// `settings`. refresh() re-reads the apps' records.
+// One recent book, with its cover or (when the recent cover setting is off, or
+// the book has none) a book icon; no content when there is no book for it.
+// `slot` 0 is the newest book, Continue reading. Takes the caption and cover
+// settings from `settings`.
 class NtRecentTile : public NtTile {
 public:
     static const char *const kLabel;
 
-    NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings);
-    void refresh();
+    NtRecentTile(QWidget *parent, NtTileHost *host, int px, const NtSettings &settings, int slot);
+
+    // The label of slot `slot`, used by order:. Slots keep their place in the grid
+    // as the books in them change.
+    static QString labelFor(int slot);
+
+    // Shows `book`; an invalid one means no content. Returns whether that changed
+    // whether the tile has content.
+    bool setBook(const NtRecentBook &book);
+
     void activate() override;
+    bool hasContent() const override { return m_book.valid; }
 
 protected:
     QStringList caption(const QFontMetrics &fm, int width) const override;
 
 private:
-    NtRecentSource m_recentSource;
     NtRecentInfo m_recentInfo;
     bool m_recentCover;
     NtRecentBook m_book;
