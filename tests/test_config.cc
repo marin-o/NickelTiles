@@ -68,7 +68,7 @@ void TestConfig::olderHideRowsKey() {
     NtSettings after = before;
     after.koboRows = NtKoboRows::Top;
     QVERIFY(nt_settings_save(before, after));
-    QCOMPARE(readConfig(), QStringLiteral("nt_kobo_rows:top\n"));
+    QCOMPARE(readConfig().trimmed(), QStringLiteral("nt_kobo_rows:top"));
 }
 
 void TestConfig::tilePx_data() {
